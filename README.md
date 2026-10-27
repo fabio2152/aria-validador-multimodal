@@ -34,12 +34,10 @@ LanguageTool tarda unos segundos en arrancar la primera vez; si no responde, el 
 
 | Pestaña | Qué se hace |
 |---|---|
+| **Dashboard** | Los errores recurrentes de los últimos 30 días, el porcentaje de piezas sin hallazgos del mes y las restricciones de marca activas, con «Agregar restricción». |
 | **Nuevo análisis** | Arrastra una imagen (o pega un enlace público de Google Drive), pega el copy y el guion, elige el formato (feed, historia, reel) y «Analizar pieza». El resultado trae el nivel de riesgo, los hallazgos por eje, la versión del corpus, el tiempo y el costo; cada hallazgo cita su regla, su evidencia y su ubicación, y se marca «Correcto» o «Incorrecto». |
 | **Historial** | Todos los análisis, filtrables por nivel de riesgo y fechas. Al abrir uno se ve su detalle y se dan o cambian los veredictos. |
 | **Reglas de marca** | El corpus vigente por eje, las versiones anteriores (sólo lectura), las reglas candidatas a ajuste y «Agregar restricción», que crea la versión N+1. |
-
-El panel lateral (en las tres pestañas) muestra los errores recurrentes de 30 días, el porcentaje de piezas sin
-hallazgos del mes y las restricciones de marca activas.
 
 ## Evaluación (KPIs)
 

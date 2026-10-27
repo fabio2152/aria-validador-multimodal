@@ -11,13 +11,7 @@
   padding-bottom: var(--space-6);
 }
 
-.val {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: var(--space-4);
-  align-items: start;
-}
-
+.val,
 .val-cuerpo {
   min-width: 0;
 }
@@ -745,14 +739,16 @@ textarea.val-entrada {
   margin: 0 14px 14px;
 }
 
-/* ── El panel lateral ───────────────────────────────────────────────────── */
+/* ── El dashboard ───────────────────────────────────────────────────────── */
 
-.val-lateral {
-  display: flex;
-  flex-direction: column;
+.val-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-3);
-  position: sticky;
-  top: 0;
+  align-items: start;
+}
+.val-dashboard-ancho {
+  grid-column: 1 / -1;
 }
 
 .val-lista {
@@ -798,7 +794,7 @@ textarea.val-entrada {
   color: var(--txt);
 }
 
-.val-lateral-vacio {
+.val-vacio-corto {
   margin: 0;
   padding: 10px 14px 12px;
   font-size: 12px;
@@ -849,11 +845,8 @@ textarea.val-entrada {
 
 /* ── El ancho ───────────────────────────────────────────────────────────── */
 
-/* Desde 1280 px el panel de ingreso va en una fila. Por debajo, se reparte en dos y el lateral baja. */
-@media (max-width: 1440px) {
-  .val {
-    grid-template-columns: minmax(0, 1fr) 260px;
-  }
+/* Desde 1280 px el panel de ingreso va en una fila. Por debajo, se reparte en dos. */
+@media (max-width: 1279px) {
   .val-ingreso-fila {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -868,11 +861,8 @@ textarea.val-entrada {
   }
 }
 @media (max-width: 1100px) {
-  .val {
+  .val-dashboard {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .val-lateral {
-    position: static;
   }
   .val-resultado {
     grid-template-columns: minmax(0, 1fr);

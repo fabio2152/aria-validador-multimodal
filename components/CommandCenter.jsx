@@ -9,7 +9,6 @@ import IconSprite from './IconSprite';
 import TopBar from './TopBar';
 import Nav from './Nav';
 import CabeceraDeDepartamento from './CabeceraDeDepartamento';
-import ConsultaAlCerebro from './ConsultaAlCerebro';
 
 // MAQUETA: de las vistas de ARIA sólo viaja el validador; las demás abren la vista de relleno.
 import ValidadorView from './views/ValidadorView';
@@ -88,9 +87,8 @@ export default function CommandCenter() {
             return <Vista key={clave} activa={clave === arranque} />;
           })}
         </main>
-        {/* DESPUÉS de `<main>`: se pregunta sobre lo que se acaba de ver. En su área, debajo del
-            cuerpo, como «Próximamente» (`NE-50`). */}
-        <ConsultaAlCerebro />
+        {/* MAQUETA: sin la caja «Pregúntale al cerebro» (`ConsultaAlCerebro`): el cerebro es de ARIA y no
+            viaja. Sin ella, la fila `consulta` de la rejilla (`app/armazon.css`) mide 0. */}
       </div>
     </>
   );

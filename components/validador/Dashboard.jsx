@@ -1,17 +1,18 @@
 'use client';
 
-/* El panel lateral, visible en las tres pestañas: los errores recurrentes de los últimos 30 días, la
- * primera revisión del mes (porcentaje de piezas sin hallazgos) y las restricciones de marca vigentes,
- * con «Agregar restricción», que lleva a la pestaña de reglas. */
+/* La pestaña «Dashboard», la primera del validador: los errores recurrentes de los últimos 30 días, la
+ * primera revisión del mes (porcentaje de piezas sin hallazgos) y las restricciones de marca vigentes, con
+ * «Agregar restricción», que lleva a la pestaña de reglas. Todo sale de `GET /api/validador/resumen`. */
 
 import { useEffect, useState } from 'react';
 import { EJES, pedir, textoDelRechazo } from './comun.js';
 
-export default function PanelLateral({ cambios, alAgregarRestriccion }) {
+export default function Dashboard({ visible, cambios, alAgregarRestriccion }) {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!visible) return undefined;
     let vigente = true;
     void (async () => {
       const r = await pedir('/api/validador/resumen');
@@ -24,25 +25,25 @@ export default function PanelLateral({ cambios, alAgregarRestriccion }) {
     return () => {
       vigente = false;
     };
-  }, [cambios]);
+  }, [visible, cambios]);
 
   const porcentaje = datos?.primeraRevision.porcentaje;
 
   return (
-    <aside className="val-lateral" aria-label="Resumen del validador">
+    <div className="val-dashboard">
       {error ? (
-        <div className="fd-aviso mal">
+        <div className="fd-aviso mal val-dashboard-ancho">
           <i>◍</i>
           <span>{error}</span>
         </div>
       ) : null}
 
-      <section className="card">
+      <section className="card val-dashboard-recurrentes">
         <div className="card-head">
           Errores recurrentes
           <span className="hint">últimos 30 días</span>
         </div>
-        {datos && datos.recurrentes.length === 0 ? <p className="val-lateral-vacio">Sin hallazgos en los últimos 30 días.</p> : null}
+        {datos && datos.recurrentes.length === 0 ? <p className="val-vacio-corto">Sin hallazgos en los últimos 30 días.</p> : null}
         <ul className="val-lista">
           {(datos?.recurrentes ?? []).map((r) => (
             <li key={`${r.codigo_de_regla}-${r.severidad}`} className={`val-recurrente sev-${r.severidad}`}>
@@ -90,7 +91,7 @@ export default function PanelLateral({ cambios, alAgregarRestriccion }) {
           Restricciones de marca
           <span className="hint">{datos ? `${datos.restricciones.length} activa${datos.restricciones.length === 1 ? '' : 's'}` : ''}</span>
         </div>
-        {datos && datos.restricciones.length === 0 ? <p className="val-lateral-vacio">El jefe del área aún no definió restricciones.</p> : null}
+        {datos && datos.restricciones.length === 0 ? <p className="val-vacio-corto">El jefe del área aún no definió restricciones.</p> : null}
         <ul className="val-lista">
           {(datos?.restricciones ?? []).map((r) => (
             <li key={r.codigo} className="val-restriccion-item">
@@ -103,6 +104,6 @@ export default function PanelLateral({ cambios, alAgregarRestriccion }) {
           + Agregar restricción
         </button>
       </section>
-    </aside>
+    </div>
   );
 }

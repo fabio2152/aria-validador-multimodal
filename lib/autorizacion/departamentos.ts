@@ -92,7 +92,8 @@ export const ENTRADAS: readonly Entrada[] = [
   { departamento: 'systems', seccion: 'conversation' },
 
   { departamento: 'marketing', seccion: 'creative' },
-  // El validador: UNA entrada en la barra (el grupo) y sus tres pestañas en la cabecera.
+  // El validador: UNA entrada en la barra (el grupo) y sus cuatro pestañas en la cabecera.
+  { departamento: 'marketing', seccion: 'validador', pestana: 'dashboard', nombre: 'Dashboard', grupo: 'Validador de contenido' },
   { departamento: 'marketing', seccion: 'validador', pestana: 'nuevo', nombre: 'Nuevo análisis', grupo: 'Validador de contenido' },
   { departamento: 'marketing', seccion: 'validador', pestana: 'historial', nombre: 'Historial', grupo: 'Validador de contenido' },
   { departamento: 'marketing', seccion: 'validador', pestana: 'reglas', nombre: 'Reglas de marca', grupo: 'Validador de contenido' },

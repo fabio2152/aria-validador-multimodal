@@ -1,5 +1,5 @@
 // El registro histórico: lo que se guarda de cada análisis y lo que se lee para el historial, el detalle,
-// la retroalimentación y el panel lateral.
+// la retroalimentación y el dashboard.
 
 import { sql } from 'kysely';
 import type { Db } from './base.ts';

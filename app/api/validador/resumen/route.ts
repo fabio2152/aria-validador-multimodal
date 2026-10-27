@@ -1,4 +1,4 @@
-// GET: lo del panel lateral. Los errores recurrentes de los últimos 30 días, el porcentaje de piezas sin
+// GET: lo del dashboard del validador. Los errores recurrentes de los últimos 30 días, el porcentaje de piezas sin
 // hallazgos del mes y las restricciones de marca de la versión vigente.
 
 import { ok } from '../../../../lib/autorizacion/respuesta.ts';
