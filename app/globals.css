@@ -1,0 +1,222 @@
+/* Tailwind v4 con dos precauciones para no tocar el diseño heredado:
+   1. sin preflight, porque el reset propio de aios.css ya manda;
+   2. con prefijo `tw:`, porque el diseño usa clases semánticas (`ring`,
+      `hidden`, `card`, `grid-3`…) que chocarían con las utilidades.
+   Se escribe `tw:flex`, `tw:bg-bg-panel`, `tw:text-accent`. */
+/* aios va en su propia capa: sin ella, su reset `* { padding:0 }` iría
+   sin capa y ganaría a TODA utilidad de Tailwind (las capas pierden
+   frente al CSS sin capa). Con la capa, `tw:p-4` puede sobrescribirlo. */
+/* ── Las dos capas de la marca v2, y por qué están donde están ──────────────
+   `marca` va ANTES de `aios`: `public/brand/tokens.css` declara en `:root` seis nombres que esta
+   aplicación también usa —`--bg`, `--line`, `--line-strong`, `--accent`, `--font-sans` y
+   `--font-mono`—. En la capa más baja, `aios.css` y `temas.css` le ganan SIEMPRE, así que los valores
+   de la aplicación son los de `temas.css` (desde la marca v2, `--bg`, `--line` y `--accent` valen lo
+   mismo en las dos capas; `--line-strong` no, ver `temas.css`). Lo que la capa aporta son los tokens
+   que no chocan con nada (`--ink`, `--surface-raised`, `--radius-*`, `--space-*`, `--glow-orb`…), y
+   las pantallas de operación ya leen de ella sus radios.
+
+   `marca-scope` va DESPUÉS de `components` por el motivo contrario: `[data-marca="v2"]` tiene
+   especificidad 0,1,0 y `:root[data-tema='oscuro']` tiene 0,2,0, así que por especificidad perdería
+   dentro de /brand. Las capas le ganan a la especificidad: en una capa posterior, el scope manda
+   donde se lo pone y en ningún otro lado. */
+@layer theme, marca, base, aios, components, marca-scope, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(tw);
+
+/* Los tokens del brandbook, sin scope. Aportan solo lo que no choca — ver la nota de capas. */
+@import "../public/brand/tokens.css" layer(marca);
+
+/* Los mismos tokens con scope `[data-marca="v2"]`, generados desde `brand/tokens.json` por
+   `scripts/marca.mjs`. Es lo que hace que /brand muestre los valores REALES de la marca sin que
+   la aplicación se entere. */
+@import "./brand/tokens-scope.css" layer(marca-scope);
+
+/* Hoja original íntegra — única fuente de verdad de los tokens. */
+@import "./aios.css" layer(aios);
+
+/* Etapa 9 · lo que el prototipo nunca tuvo: formularios y documentos largos.
+   Va en `components`, que gana a `aios`: sin eso, el reset `* { margin:0 }`
+   de la hoja original se comería todos los márgenes de acá. Y no toca
+   `aios.css`, que tiene que seguir siendo diffeable contra el HTML original. */
+@import "./fundaciones.css" layer(components);
+
+/* Etapa 11 · Ajustes — los campos de la configuración de la empresa. Misma capa y por el
+   mismo motivo: el prototipo era un tablero de LECTURA y no tenía un solo formulario. */
+@import "./ajustes.css" layer(components);
+
+/* Etapa 11 · lo que cambió de sitio en el armazón: el menú de la cuenta, que estaba
+   arriba a la derecha con un nombre fijo y sin cerrar sesión de verdad. */
+@import "./armazon.css" layer(components);
+
+/* La ficha del contacto y el interior del Closer. Va DESPUÉS de `aios.css` y en la capa
+   `components` porque corrige reglas de la hoja portada sin tocarla: `aios.css` tiene que seguir
+   siendo comparable contra `aios-command-center_1.html`, para que un diff diga qué se desvió del
+   diseño original. El motivo largo está en el encabezado del archivo. */
+@import "./closer.css" layer(components);
+
+/* La estética de operación, con alcance `:is(#v-closer, .estetica-op)`: la lleva toda vista que
+   se anote con esa clase en su `<section>`. Hoja aparte porque `closer.css` tiene reglas que las
+   pruebas leen por su forma exacta. Se llamaba `closer-estetica.css` mientras colgaba de una sola
+   vista, y este comentario decía que Ajustes y los tableros no se movían — dejó de ser cierto, y
+   un comentario viejo acá cuesta media hora de buscar por qué algo se ve distinto. Sus colores
+   son los del tema; `temas.css` guarda con su alcance los pocos que el tema no tiene. */
+@import "./operacion-estetica.css" layer(components);
+
+/* El Panel de Monitoreo: la tabla de consumo de todas las empresas. Misma capa y mismo motivo
+   que las de arriba — esta pantalla no existe en el prototipo, así que `aios.css` no tiene nada
+   que decir sobre ella y no se toca. */
+/* Acá iba `inteligencia-estetica.css`, la estética de operación de los cinco tableros de Inteligencia. Se borró
+   el 2026-10-11, cuando Creative —la última que la usaba— volvió al front del prototipo (docs/creative/16, CF1-01). */
+
+@import "./monitoreo.css" layer(components);
+@import "./incidentes.css" layer(components);
+/* Client OS, la herramienta externa en prueba (2026-10-08): el marco del `iframe`. */
+@import "./client-os.css" layer(components);
+@import "./auditoria.css" layer(components);
+
+/* Leads Portal con leads reales. Hoja aparte por lo mismo que `closer.css`: agrega lo que la maqueta
+   no tenía —las tarjetas como botones, el paso de tres estados, los avisos— sin tocar `aios.css`. */
+@import "./leads-portal.css" layer(components);
+@import "./creative.css" layer(components);
+
+/* Acquisition con el front del prototipo (AQ-4). Hoja aparte por lo mismo que `leads-portal.css`:
+   agrega lo que la maqueta no tenía —el selector de funnel, los huecos, el teléfono— sin tocar
+   `aios.css`. */
+@import "./acquisition.css" layer(components);
+
+/* Conversion con el front del prototipo (CV-4). Hoja aparte por lo mismo que `acquisition.css`: agrega lo que
+   la maqueta no tenía —la nota de cobertura, el cajón de cada paso, el teléfono— sin tocar `aios.css`. */
+@import "./conversion.css" layer(components);
+
+/* Sales con el front del prototipo (SA-3). Hoja aparte por lo mismo: agrega lo que la maqueta no tenía —el motivo
+   de cada «—», la tarjeta de la cadena comercial, el teléfono— sin tocar `aios.css`. */
+@import "./sales.css" layer(components);
+
+/* Conversation con el front del prototipo (CN-3). Hoja aparte por lo mismo: agrega lo que la maqueta no tenía —la
+   línea de cada «—», la fila de cifras de abajo, el contenedor del supervisor, el teléfono— sin tocar `aios.css`. */
+@import "./conversation.css" layer(components);
+
+/* Las señales y el Plan de acción de los departamentos con detector (AG9 y AG10 de los agentes): un solo
+   componente en Acquisition y en Creative Insights, y por eso una sola hoja. */
+@import "./senales.css" layer(components);
+
+/* La cabecera de cada departamento (nueva estructura, E11): la ceja, el nombre de la entrada abierta y
+   la fila de pestañas, y la regla que oculta los títulos propios de las pantallas debajo de ella. */
+@import "./departamentos.css" layer(components);
+
+/* El cerebro en pantalla (AG7 de los agentes): las burbujas, el panel que sube y CONVERSACIONES. */
+@import "./cerebro.css" layer(components);
+
+/* MAQUETA: el validador de contenido (Marketing › Validador de contenido). Antes de `temas.css`, como
+   toda hoja de pantalla: usa los tokens que el tema redefine. */
+@import "./validador.css" layer(components);
+
+/* Los dos temas. VA ÚLTIMO de la capa `components` a propósito: redefine tokens que las hojas de
+   arriba usan, así que tiene que ganarles a todas. El motivo de que sea un archivo aparte y no una
+   edición del `:root` de `aios.css` está en su encabezado. */
+@import "./temas.css" layer(components);
+
+/* Los tokens del diseño expuestos como utilidades de Tailwind.
+   `inline` hace que las clases apunten a la var, no a una copia. */
+@theme inline {
+  --color-bg:          var(--bg);
+  --color-bg-sunk:     var(--bg-sunk);
+  --color-bg-panel:    var(--bg-panel);
+  --color-bg-raise:    var(--bg-raise);
+  --color-bg-float:    var(--bg-float);
+  --color-line:        var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-txt:         var(--txt);
+  --color-txt-dim:     var(--txt-dim);
+  --color-txt-faint:   var(--txt-faint);
+  --color-accent:      var(--accent);
+  --color-accent-dim:  var(--accent-dim);
+  --color-exec:        var(--exec);
+  --color-exec-dim:    var(--exec-dim);
+  --color-warn:        var(--warn);
+  --color-crit:        var(--crit);
+  --color-ok:          var(--ok);
+  --color-dev:         var(--dev);
+
+  --shadow-1:    var(--sh-1);
+  --shadow-2:    var(--sh-2);
+  --shadow-3:    var(--sh-3);
+  --shadow-hair: var(--hair);
+
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
+}
+
+/* Las letras de la aplicación: Geist y Geist Mono, que carga `next/font` en `app/layout.js`.
+
+   PRIMERO Geist, y no detrás de las del sistema como estaban Inter y Plex —que copiaban el orden del
+   <link> del prototipo—. Con `-apple-system` adelante, en una Mac se veía San Francisco y en Windows
+   Inter: la misma pantalla con dos letras según la máquina. Las del sistema quedan sólo de respaldo.
+
+   Sin capa a propósito: le gana a la definición de `aios.css` (capa `aios`), que tiene que seguir
+   siendo comparable contra el HTML del prototipo. */
+:root {
+  --font-ui:   var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* La guarda de sesión: se dibuja antes que cualquier hoja del centro de mando, así que
+   trae su propio mínimo. Ver `app/guardia.tsx`. */
+.guardia {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg, #04060a);
+  color: var(--txt, #f2f5f9);
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+
+.guardia-caja {
+  max-width: 380px;
+  text-align: center;
+}
+
+.guardia-titulo {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.guardia-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--txt-dim, #aab3c1);
+}
+
+.guardia-caja > button {
+  margin-top: 16px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--sobre-acento, #04060a);
+  background: var(--accent, #8fe3ff);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ── LAS FILAS DEL MENÚ SON BOTONES (etapa E9 de la nueva estructura) ──────
+   El prototipo las dibujaba como `div`, que no se enfocan ni se activan con el teclado. Como
+   `<button>`, el navegador les pone su fondo, su borde, su letra y el texto centrado; esto se los
+   quita. Va en la capa `base` y no en `armazon.css` (capa `components`) a propósito: `base` pierde
+   contra `aios` y contra `components`, así que esto sólo quita el estilo del botón y el aspecto lo
+   pone otra hoja —`aios.css` en la etapa E9, `armazon.css` desde la E10—. En `components`, este
+   `background: none` les ganaría por capa a los fondos de `aios.css`. */
+@layer base {
+  button.nav-item {
+    width: 100%;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+  }
+}

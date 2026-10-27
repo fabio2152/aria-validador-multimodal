@@ -1,0 +1,94 @@
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.pem
+npm-debug.log*
+.env*.local
+.vercel
+.port/
+.env*
+# La plantilla SÍ se versiona — la regla `.env*` de arriba se la tragaría.
+# Solo NOMBRES de variables, ningún valor.
+!.env.example
+
+# ── Notas y volcados de credenciales que alguien deja en la raíz ─────────────
+#
+# La regla `.env*` de arriba NO los agarra: un archivo con las variables de
+# producción pegadas se llama "variables de entorno.txt", no ".env". Y este
+# repositorio es PÚBLICO, así que un `git add .` distraído publica secretos de
+# forma permanente — quedan en la caché de GitHub y en cada clon, aunque después
+# se borre el archivo.
+#
+# Se ignoran por EXTENSIÓN y no por nombre: el nombre exacto siempre es otro.
+*.txt
+!README.txt
+*.csv
+*.env
+credenciales*
+secretos*
+
+# ── Y LA EXCEPCIÓN: el CÓDIGO que se llama así ───────────────────────────────
+#
+# Las dos reglas de arriba son por PREFIJO y sin extensión, a propósito: un volcado
+# de credenciales se llama "credenciales de produccion" y no tiene extensión.
+#
+# El costo apareció el 2026-08-24: `components/ajustes/Credenciales.jsx` —un
+# componente de React, no un secreto— quedó fuera del repositorio. Y falló de la
+# peor forma posible: **el build LOCAL pasaba**, porque el archivo existe en el
+# disco. Solo se cayó al construir desde el repositorio, con `Module not found`.
+#
+# No se debilitan las reglas: se excluye el código fuente, que nunca es un volcado
+# de credenciales. Un archivo de secretos no se llama `.jsx`.
+!*.jsx
+!*.tsx
+!*.ts
+!*.js
+!*.sql
+!*.css
+
+# ── Y LAS EXTENSIONES NO ALCANZAN: FALTABA EL DIRECTORIO ─────────────────
+#
+# `credenciales*` es por prefijo y sin barra, así que agarra también **la carpeta**
+# `app/api/admin/credenciales/`. Y git NO ENTRA en un directorio ignorado, o sea que
+# las seis negaciones de arriba no llegan a mirar los archivos de adentro.
+#
+# El síntoma es el mismo incidente del 2026-08-24 con una vuelta más de tuerca:
+# `git add app/api/admin/credenciales/route.ts` responde *"paths are ignored"* y **no
+# agrega nada**. El archivo YA está rastreado, así que `git commit -a` sí lo toma — lo
+# que hace que el problema aparezca de forma intermitente, según cómo se agregue.
+#
+# Se re-incluye la carpeta por nombre completo. No debilita nada: nombra UNA ruta de
+# código que existe, y un volcado de secretos no se llama `app/api/admin/`.
+!app/api/admin/credenciales/
+#
+# Y la SEGUNDA carpeta de código con ese nombre, que faltaba: `lib/credenciales/`
+# —el cifrado y el resolvedor de las llaves—. Sus tres archivos estaban rastreados desde
+# antes de la regla, así que nadie lo notó hasta que hubo que cambiar uno: el 2026-09-22
+# `git add lib/credenciales/resolver.ts` respondió *"paths are ignored"*, y la única salida
+# era `git add -f` sobre un repositorio público — que es exactamente el gesto que esta
+# sección existe para que nadie tenga que hacer. Mismo criterio que la de arriba: una ruta
+# de código que existe, con nombre completo.
+!lib/credenciales/
+
+graphify-out/
+
+# TypeScript: los dos los genera la herramienta.
+# `next-env.d.ts` lo reescribe `next dev`/`next build` y además importa de
+# `.next/types/`, así que sin un build previo no resuelve. Consecuencia para la
+# integración: `tsc --noEmit` corre DESPUÉS de `next build`, no antes.
+next-env.d.ts
+*.tsbuildinfo
+
+# Herramientas locales de desarrollo: ni la aplicación, ni la CI ni las pruebas las usan (medido el
+# 2026-09-29). Siguen en disco en cada máquina; sólo dejan de versionarse. `AGENTS.md` además lo
+# reescribe `next dev`, y versionado aparecía como cambio sin commitear cada vez.
+/.claude/
+/CLAUDE.md
+/AGENTS.md
+/tools/graphify/
+
+# ── Maqueta del validador ─────────────────────────────────────────────────────
+# Las piezas subidas: la tabla guarda la ruta, el archivo vive acá y nunca se versiona.
+almacen/

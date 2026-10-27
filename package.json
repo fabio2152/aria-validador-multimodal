@@ -1,0 +1,36 @@
+{
+  "name": "aria-validador-multimodal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.14.1 <25"
+  },
+  "scripts": {
+    "dev": "next dev -p 3200",
+    "build": "next build",
+    "start": "next start -p 3200",
+    "tipos": "next typegen && tsc --noEmit",
+    "db:migrar": "node --env-file-if-exists=.env.local scripts/db.mjs migrar",
+    "db:sembrar": "node --env-file-if-exists=.env.local scripts/db.mjs sembrar",
+    "db:reset": "node --env-file-if-exists=.env.local scripts/db.mjs reset",
+    "validador:evaluar": "node --env-file-if-exists=.env.local scripts/evaluar.mjs"
+  },
+  "dependencies": {
+    "image-size": "2.0.4",
+    "kysely": "0.29.5",
+    "next": "16.3.1",
+    "pg": "8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.13.3",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  }
+}

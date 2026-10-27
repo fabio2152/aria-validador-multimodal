@@ -1,0 +1,359 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA CABECERA DE UN DEPARTAMENTO (etapa E11 de la nueva estructura, `NE-17`)
+
+   Del lienzo «Departamentos por dentro», con los tokens de la app en lugar de sus hex: la ceja en mono
+   y `ink-3`, el nombre de la entrada abierta en 30 px y peso 500, y la fila de pestañas con la abierta
+   subrayada en el acento. La dibuja `components/CabeceraDeDepartamento.jsx` en su propia área de la
+   rejilla del armazón (`app/armazon.css`), fuera de `.main`.
+
+   Los 28, 40, 18 y 26 px del lienzo no son tokens de la marca: van escritos, como en la barra lateral.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* El relleno de los costados sigue al cuerpo de las pantallas de operación: 40 px, o lo que el cuerpo
+   se corre cuando se centra en sus 1600 px (`app/operacion-estetica.css`), en una pantalla ancha. Sin
+   eso, a partir de unos 1900 px la cabecera quedaba pegada a la barra y el cuerpo, en el medio.
+   Acquisition y Leads Portal arrancan a 18 px del borde: alinearlos es de la fase de detalles.
+
+   Lo llevan las dos filas y no la `.cd`, que va de borde a borde: la línea va debajo de la fila de
+   pestañas, y las sub-pestañas de un grupo, debajo de la línea, como el diseño de la segunda edición
+   las pone al principio del cuerpo. El `100%` se resuelve contra la `.cd` en las dos, que es la misma. */
+.cd {
+  --cd-costado: max(40px, calc((100% - 1600px) / 2 + 24px));
+  grid-area: cabecera;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+}
+.cd-arriba {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 28px var(--cd-costado) 0;
+  border-bottom: 1px solid var(--line);
+}
+/* Sin fila de pestañas, la línea no queda pegada al título. */
+.cd.sin-pestanas .cd-arriba {
+  padding-bottom: 22px;
+}
+.cd-titulo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.cd-ceja {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--txt-faint);
+}
+.cd-nombre {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+  color: var(--txt);
+}
+
+/* La fila: en la computadora, cuando no entra, se parte en dos renglones y ninguna pestaña queda fuera
+   de la vista —con la fila deslizable, a 1280 px la abierta de Marketing, que en la primera edición
+   tenía ocho entradas, quedaba entera afuera, y nada decía que la fila seguía—. En el teléfono se
+   desliza, y la cabecera trae a la vista la abierta y la que recibe el foco (`traerALaVista`). */
+.cd-pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 26px;
+  min-width: 0;
+}
+.cd-pestana {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  height: 40px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--txt-faint);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+button.cd-pestana:hover {
+  color: var(--txt);
+}
+.cd-pestana.on {
+  color: var(--txt);
+  border-bottom-color: var(--accent);
+}
+/* El foco, por DENTRO de la pestaña: el de `temas.css` va 2 px por fuera, y una fila que se desliza
+   recorta lo que se sale de ella —quedaban dos rayas verticales, que se leían como separadores—. Le
+   gana por especificidad a la de `temas.css`, que va después en la misma capa. Sin la pseudoclase de la
+   raíz en el selector, ni acá ni en ningún comentario de esta hoja: `pruebas/codigo/104-temas.test.ts`
+   salta todo lo que va antes de la primera vez que la hoja la nombra, y dejaría de ver un color escrito
+   a mano arriba de éste. */
+.cd .cd-pestanas button.cd-pestana:focus-visible {
+  outline-offset: -2px;
+}
+/* Una «Próximamente»: no es un botón, sin mano ni color al pasar. El nombre queda en la misma línea
+   que el de las pestañas de verdad, como en el lienzo, y la palabra cuelga debajo, dentro de los 40 px. */
+.cd-proxima {
+  position: relative;
+  cursor: default;
+}
+.cd-proxima .nb-proximamente {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ── LAS SUB-PESTAÑAS DE UN GRUPO (`NE-45`) ──────────────────────────────────
+
+   Píldoras, como las del diseño de la segunda edición: la línea más fuerte de la marca y el texto
+   atenuado; la abierta, invertida —el texto de la marca de fondo y el fondo de letra—. Se parten en
+   renglones en la computadora, como la fila de arriba, y se deslizan en el teléfono.
+
+   El foco va POR FUERA, y no por dentro como en la fila de arriba: en la abierta, por dentro, el anillo
+   caía sobre su propio fondo invertido y sólo cambiaba el color de un canto. En el teléfono, donde la
+   fila se desliza y recorta, la fila deja abajo y arriba el lugar del anillo. */
+/* El comentario del cerebro (AG15 de los agentes): una línea con la mascota de 28 px, al final de la cabecera,
+   debajo de la línea y de las sub-pestañas —a la derecha del título, como en la Simulación, están las pestañas—. En el teléfono no va
+   (`D-27`). */
+.cd-comentario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px var(--cd-costado) 0;
+  color: var(--txt-dim);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.cd-comentario .cd-mascota {
+  flex: 0 0 auto;
+}
+.cd-comentario .cd-texto {
+  min-width: 0;
+}
+.cd-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px var(--cd-costado) 0;
+}
+.cd-sub {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: none;
+  color: var(--txt-dim);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+/* Sin la abierta: con su fondo invertido, el color del hover la dejaba con la letra del color del
+   fondo, sin nombre bajo el puntero —y en el teléfono, donde el hover se queda en lo tocado, hasta
+   tocar otra cosa—. */
+button.cd-sub:not(.on):hover {
+  color: var(--txt);
+}
+.cd-sub.on {
+  border-color: var(--txt);
+  background: var(--txt);
+  color: var(--bg);
+}
+.cd .cd-subs button.cd-sub:focus-visible {
+  outline-offset: 2px;
+}
+/* La «Próximamente» del grupo: sin mano, con la línea punteada y la palabra al lado, dentro de la
+   píldora, que no tiene alto para colgarla debajo. */
+.cd-sub-proxima {
+  border-style: dashed;
+  color: var(--txt-faint);
+  cursor: default;
+}
+
+/* ── LOS TÍTULOS PROPIOS DE LAS PANTALLAS ───────────────────────────────────
+
+   Con la cabecera de un departamento a la vista, el `h2` y la bajada que cada pantalla trae por dentro
+   se ocultan: si no, se leería «Tools» debajo de «Radar», un lugar que ya no existe. Sólo si HAY
+   cabecera (`.app:has(> .cd)`): en el Inicio, que no tiene, el título propio es el único que hay, y
+   vuelve solo. Con la del engranaje (`.cd-engranaje`, desde la segunda edición) se oculta sólo el `h2`:
+   la cabecera ya dice «Ajustes», y la bajada de Ajustes dice de qué empresa es la configuración.
+
+   Hay dos formas de cabecera, y en las dos se oculta lo que es título y nada más:
+     · la de operación, `.cre-head > .ch-l.stack > .ch-title > h2 + .cre-desc`, con las pestañas
+       propias de Closer y Setter como hermanas de `.ch-title`: se oculta `.ch-title`;
+     · la del prototipo (Acquisition, Leads Portal), `.cre-head > .ch-l > h2 + .cre-desc`, con los
+       períodos en `.ch-r`: se oculta ese `.ch-l`.
+   No `.ch-l` a secas, que en la de operación lleva las pestañas, ni `.cre-desc` suelta, que Auditoría
+   usa dentro de sus secciones. Y no se borran del marcado: la estética de operación los exige
+   (`pruebas/codigo/146-estetica-de-operacion.test.ts`). */
+.app:has(> .cd:not(.cd-engranaje)) .main .cre-head .ch-title,
+.app:has(> .cd:not(.cd-engranaje)) .main .cre-head > .ch-l:not(.stack),
+.app:has(> .cd-engranaje) .main .cre-head .ch-title > h2 {
+  display: none;
+}
+/* La bajada que queda en lo del engranaje es una línea de descripción, no un título: la estética de
+   operación la dibuja en 24 px y negrita (`app/operacion-estetica.css`, donde el `h2` es el rótulo y la
+   bajada el título), y debajo del «Ajustes» de la cabecera se leían dos títulos. El `:is(#v-closer, …)`
+   es para ganarle a esa regla, que lleva el id. */
+.app:has(> .cd-engranaje) .main :is(#v-closer, .estetica-op) .cre-head .cre-desc {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+  color: var(--txt-dim);
+}
+/* La cabecera de la pantalla que queda vacía —sin pestañas ni controles— sale del flujo y de la vista.
+   `display: none` no sirve: `aios.css` le pone `display: grid !important`, y un `!important` de una
+   capa anterior le gana a cualquiera de ésta. Sin esto quedaban 38 px vacíos con su línea, más el
+   espacio del desplazador. En lo del engranaje no queda vacía: queda la bajada. */
+.app:has(> .cd:not(.cd-engranaje)) .main .cre-head:not(:has(.cl-sub, .ch-r)) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+/* Y la que se queda —la cápsula de pestañas propias de Closer y Setter— pierde su línea de abajo: con
+   la de la cabecera arriba quedaban dos, con una franja de 89 px que sólo llevaba la cápsula. El
+   `:is(#v-closer, …)` es para ganarle a la regla de `operacion-estetica.css`, que lleva ese id. */
+.app:has(> .cd) .main :is(#v-closer, .estetica-op) .cre-head {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* ── LA CAJA DEL CEREBRO, AL PIE (`NE-50`) ──────────────────────────────────
+
+   La dibuja `components/ConsultaAlCerebro.jsx` en su área de la rejilla, debajo del cuerpo, con los
+   costados del cuerpo, como la cabecera. Es la caja del Inicio en un renglón —el mismo borde de control,
+   el mismo fondo elevado, el texto de muestra en el piso de la marca y el botón de enviar como secundario
+   mientras no hay qué mandar, sin opacidad (`app/armazon.css`, `#v-executive .inicio-caja`)—. Lo que dice
+   por qué no se puede preguntar, y el panel que sube, están en `app/cerebro.css` (AG7 de los agentes). */
+.cc-consulta {
+  grid-area: consulta;
+  min-width: 0;
+  padding: 12px max(40px, calc((100% - 1600px) / 2 + 24px)) 20px;
+  background: var(--bg);
+}
+.cc-caja {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 8px 8px 18px;
+  /* El borde de control a 3:1, desde que la caja pregunta (`app/armazon.css`, la caja del Inicio). */
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raise);
+}
+.cc-campo {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--txt);
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  text-overflow: ellipsis;
+}
+.cc-campo::placeholder {
+  color: var(--txt-faint);
+  opacity: 1;
+}
+.cc-campo:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+.cc-enviar {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--txt);
+  cursor: pointer;
+}
+.cc-enviar:disabled {
+  border-color: var(--line-strong);
+  color: var(--txt-faint);
+  cursor: not-allowed;
+  opacity: 1;
+}
+.cc-enviar svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* En el teléfono, la misma cabecera más compacta: el lienzo no tiene versión de teléfono (`NE-18`). */
+@media (max-width: 760px) {
+  .cd {
+    --cd-costado: 16px;
+  }
+  .cd-comentario {
+    display: none;
+  }
+  .cd-arriba {
+    gap: 12px;
+    padding-top: 16px;
+  }
+  .cd.sin-pestanas .cd-arriba {
+    padding-bottom: 14px;
+  }
+  .cd-subs {
+    flex-wrap: nowrap;
+    padding-top: 10px;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cd-subs::-webkit-scrollbar {
+    display: none;
+  }
+  .cd-nombre {
+    font-size: 22px;
+  }
+  /* Un renglón que se desliza, sin barra a la vista, como la tira de pestañas del teléfono. */
+  .cd-pestanas {
+    flex-wrap: nowrap;
+    column-gap: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cd-pestanas::-webkit-scrollbar {
+    display: none;
+  }
+  /* La caja del cerebro no va en el teléfono (`NE-18`): la rejilla del corte no tiene su área. */
+  .cc-consulta {
+    display: none;
+  }
+}

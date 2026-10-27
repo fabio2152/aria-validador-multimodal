@@ -1,0 +1,12 @@
+{
+  "id": "009",
+  "formato_destino": "feed",
+  "copy": "Aprovecha el 50 % de descuento en nuestra mentoría. Solo por hoy.",
+  "guion": "",
+  "conforme": false,
+  "reglas_esperadas": [
+    "MARCA-POS-01",
+    "MARCA-TONO-02"
+  ],
+  "nota": "Descuento como argumento y escasez forzada en imagen y copy"
+}

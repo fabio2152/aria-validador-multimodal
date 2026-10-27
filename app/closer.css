@@ -1,0 +1,2094 @@
+/* La ficha del contacto y el interior del Closer: lo que el prototipo dejó a medias.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════
+ * POR QUÉ ESTA HOJA EXISTE Y NO SE ARREGLA `aios.css`
+ *
+ * `app/aios.css` es el port literal de `aios-command-center_1.html` y tiene que **seguir siendo
+ * comparable contra él**: es lo que hacía que `scripts/paridad.mjs` significara algo y lo que permite
+ * mirar un diff y saber si algo se desvió del diseño original. Arreglar ahí adentro rompe esa
+ * propiedad para siempre.
+ *
+ * Es el mismo motivo por el que existen `fundaciones.css`, `ajustes.css` y `armazon.css`, y va en la
+ * misma capa (`components`), que gana a `aios` sin necesidad de un solo `!important`.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════
+ * EL DEFECTO QUE ORIGINÓ TODO: `.out` NO ES UNA CLASE DEL CHAT
+ *
+ * Una burbuja saliente se dibujaba `class="msgw out"`. Y en `aios.css:654` vive esto, que es de otro
+ * componente por completo —las fichas de indicador de Fundaciones, con su `.out .k` y su `.out .v`—:
+ *
+ *     .out{ … padding:0 11px; height:38px; display:flex; align-items:center; gap:8px; }
+ *
+ * `.msgw` no declara `display` ni `height`, así que la burbuja saliente **heredaba las dos**:
+ *
+ *   · `height:38px` fijo → un mensaje de 87 caracteres se dibujaba en una caja de 38 px y el texto
+ *     se salía por abajo. Medido en el navegador: alto 38 px con dos renglones adentro.
+ *   · `display:flex` → el texto y el renglón de la hora dejaban de apilarse y se ponían **uno al
+ *     lado del otro**, con la hora estrujada contra el borde derecho.
+ *
+ * Y esto es un defecto HEREDADO, no introducido: el prototipo tiene las dos reglas y el mismo choque.
+ * El port fue fiel, y copió fielmente el defecto.
+ *
+ * Por eso los modificadores se renombran a `msgw-sale` / `msgw-entra`, que no pueden chocar con
+ * nada, en vez de taparlo con un `display:block` defensivo: un parche deja la colisión viva y el
+ * próximo que toque `.out` la vuelve a romper sin enterarse.
+ * `pruebas/codigo/103-ficha-diseno.test.ts` impide que vuelva a haber un modificador de una palabra.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════
+ * Y EL SEGUNDO: UNA BURBUJA NO PUEDE SER UN BLOQUE
+ *
+ * `.cw-body` es `display:block` y `.msgw` sólo trae `max-width:82%`. Un bloque **ocupa todo el ancho
+ * disponible** y `max-width` únicamente lo recorta: medido, TODAS las burbujas medían 419,3 px, la
+ * de «ok» igual que la de 193 caracteres. Con `text-align:right` en el renglón de la hora, «23:18»
+ * quedaba a 380 px de la palabra «Hola». Eso es, literalmente, «los mensajes no están alineados».
+ *
+ * La regla `.cl` del propio prototipo (`aios.css:1917`) hace lo correcto —`align-self:flex-end`
+ * sobre un padre flex— así que el molde ya estaba: al chat se le aplicó a medias.
+ * ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ── LA ESCALA DEL PANEL ─────────────────────────────────────────────────────
+   Cuatro variables y no números sueltos, porque el problema de fondo del panel era ése: el
+   encabezado respiraba 20 px, las pestañas 16, el compositor 16 y el cuerpo 20 más los 8 de la barra
+   de desplazamiento. Cuatro ejes verticales distintos en una columna de 560 px de ancho.
+
+   `--cw-canal` es el ancho que se le come la barra de desplazamiento. `.cw-body` la reserva SIEMPRE
+   con `scrollbar-gutter`, así que el borde derecho del contenido no salta cuando la conversación
+   crece lo suficiente para desplazarse. */
+.cw {
+  --cw-pad: 20px;
+  --cw-canal: 8px;
+  --cw-radio: 12px;
+  --cw-radio-chico: 9px;
+  --cw-gap: 12px;
+}
+
+/* ── 1 · EL ENCABEZADO, QUE SE APLASTABA ─────────────────────────────────────
+   Medido con un nombre real de 39 caracteres: los cinco controles de `.cw-top` competían por 519 px
+   sin que ninguno declarara si podía encogerse, y perdían los tres a la vez — el nombre partido en
+   dos renglones, «Avanzar →» partido en dos renglones, y la ✕ estrujada de 28 px a 23,6.
+
+   La identidad y las acciones se separan en dos filas. No es sólo espacio: son dos cosas distintas
+   —quién es esto, y qué puedo hacerle— y el `02` § 2 ya dice que el encabezado «es una foto del
+   contacto, no un panel de control». Tenerlas mezcladas era lo que forzaba la competencia. */
+.cw-h {
+  padding: 16px var(--cw-pad) 14px;
+}
+
+.cw-top {
+  align-items: flex-start;
+  gap: 11px;
+}
+
+/* La identidad ocupa lo que sobre y **se recorta con puntos suspensivos**. `min-width:0` es lo que
+   falta casi siempre en un hijo de flex: sin él, el mínimo automático es el contenido, y el nombre
+   largo empuja a todos los demás en vez de recortarse. */
+.cw-quien {
+  min-width: 0;
+  flex: 1;
+}
+
+.cw-quien .cw-n,
+.cw-quien .cw-p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* La ✕ no se encoge. Es el único control que tiene que existir siempre: si algo se rompe adentro
+   del panel, es la salida. */
+.cw .cw-x {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  transition: background .14s ease, border-color .14s ease;
+}
+
+.cw .cw-x:hover {
+  border-color: var(--line-strong);
+}
+
+.cw .cw-x:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Las acciones, en su propia fila.
+   `.cw-go` ya existía en `aios.css` —es el botón principal que el prototipo dibujaba en este panel—
+   y el port lo dejó muerto: Avanzar se hizo con `.fd-btn`, que es un botón de FORMULARIO y mide
+   10 px más de alto que sus vecinos. Se le devuelve el suyo. */
+.cw-acciones {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.cw-acciones .cw-go {
+  width: auto;
+  flex: 1 1 auto;
+  margin-top: 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  border-radius: var(--cw-radio-chico);
+  white-space: nowrap;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   LOS SEIS ÍCONOS NO SON CLICABLES, Y EL PROTOTIPO DECÍA QUE SÍ
+
+   `aios.css` trae `.md-acts i { cursor: pointer }` con su `:hover`, porque en el prototipo eran
+   botones de acción dibujados a mano. En esta aplicación **no lo son**: `SeisIconos` los dibuja como
+   `<i>` sin `onClick`, y así se decidió —muestran el dato real, no abren nada—.
+
+   Un cursor de mano sobre algo inerte es la clase de mentira que cuesta tiempo real: se hace clic,
+   no pasa nada, y se hace clic otra vez creyendo que falló. Y contradice lo que el propio
+   encabezado de la ficha declara: *«nada de acá es clicable salvo cerrar»*.
+
+   Va acá y no en `aios.css` por el motivo del encabezado de este archivo: esa hoja tiene que seguir
+   siendo comparable contra el HTML del prototipo. Esta capa (`components`) le gana sin un solo
+   `!important`.
+   ════════════════════════════════════════════════════════════════════════════ */
+.md-acts i {
+  cursor: default;
+}
+
+/* Y el `:hover` también se anula: aclarar el color al pasar por encima es la otra mitad de la misma
+   promesa. El ícono ya tiene tres opacidades que significan algo —sin datos, cero, con valor— y un
+   cuarto estado que solo depende de dónde está el ratón compite con esa lectura. */
+.md-acts i:hover {
+  color: inherit;
+}
+
+/* Los dos botones secundarios de esta fila —«Ver en GHL» y «Agendar»— se quitaron, y sus tres
+   reglas se fueron con ellos: la de caja, la de `:disabled` y la de `[aria-disabled]`. La clase base
+   sigue viviendo en `aios.css`, que es el prototipo y no se toca. */
+.cw-acciones .cw-go:focus-visible,
+.cw-tabs button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* La píldora y los seis íconos: que no se peguen al nombre ni entre sí. */
+.cw-meta {
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin-top: 13px;
+}
+
+/* ── 2 · UN SOLO EJE VERTICAL ────────────────────────────────────────────────
+   Las pestañas llevaban `padding:10px 16px` y cada botón `7px 12px`, así que el texto de «Chat»
+   empezaba a 28 px del borde mientras el nombre del contacto empezaba a 20. Se compensa el padding
+   interno del botón para que el TEXTO —que es lo que el ojo alinea— caiga en el mismo eje. */
+.cw-tabs {
+  padding: 8px calc(var(--cw-pad) - 12px);
+  gap: 2px;
+}
+
+.cw-tabs button {
+  border-radius: var(--cw-radio-chico);
+}
+
+/* Y el cuerpo reserva el canal de la barra de desplazamiento en vez de dejar que aparezca y corra
+   todo 8 px. Con `stable`, el borde derecho del contenido queda a `--cw-pad` haya o no scroll. */
+.cw-body {
+  padding: 16px calc(var(--cw-pad) - var(--cw-canal)) 20px var(--cw-pad);
+  scrollbar-gutter: stable;
+}
+
+/* ── 3 · LA COLUMNA DEL CHAT ─────────────────────────────────────────────────
+   Contenedor propio, y no `.cw-body` a secas, porque las otras cuatro pestañas necesitan bloques de
+   ancho completo: volver flex al cuerpo entero encogería las tarjetas del Perfil al ancho de su
+   texto. */
+.cw-chat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Ahora la burbuja es un hijo de flex, así que **mide lo que mide su contenido**, con el tope del
+   82 % que el prototipo ya quería. El `margin-bottom:9px` de `aios.css` se anula: el ritmo lo
+   deciden las reglas de adyacencia de más abajo, que saben de qué lado viene cada mensaje. */
+.cw-chat .msgw {
+  margin: 0;
+  max-width: 82%;
+  /* Una URL sin espacios o un identificador largo desbordaban la burbuja. `anywhere` corta dentro de
+     la palabra sólo cuando no hay otra salida. */
+  overflow-wrap: anywhere;
+}
+
+.cw-chat .msgw-entra {
+  align-self: flex-start;
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  color: var(--txt);
+  /* La esquina viva marca de qué lado habla cada uno. Es lo que hace que la columna se lea como una
+     conversación y no como una lista de tarjetas. */
+  border-radius: var(--cw-radio) var(--cw-radio) var(--cw-radio) 4px;
+}
+
+.cw-chat .msgw-sale {
+  align-self: flex-end;
+  background: rgb(var(--c-acento) / .09);
+  border: 1px solid rgb(var(--c-acento) / .18);
+  color: var(--txt);
+  border-radius: var(--cw-radio) var(--cw-radio) 4px var(--cw-radio);
+}
+
+/* EL RITMO AGRUPA. Dos mensajes seguidos del mismo lado son un turno: van pegados. Un cambio de lado
+   es otra persona hablando: va separado. Con un `margin-bottom` fijo, cuarenta mensajes eran cuarenta
+   tarjetas equidistantes y no se veía dónde terminaba cada turno. */
+.cw-chat .msgw + .msgw {
+  margin-top: 3px;
+}
+
+.cw-chat .msgw-entra + .msgw-sale,
+.cw-chat .msgw-sale + .msgw-entra {
+  margin-top: 12px;
+}
+
+/* Dentro de un turno, sólo la última burbuja lleva la esquina viva. */
+.cw-chat .msgw-entra:has(+ .msgw-entra) {
+  border-bottom-left-radius: var(--cw-radio);
+}
+
+.cw-chat .msgw-sale:has(+ .msgw-sale) {
+  border-bottom-right-radius: var(--cw-radio);
+}
+
+/* El renglón de la hora y el estado.
+   Sube de 9,5 px a 11 px y de `--txt-faint` a `--txt-dim`, y lo segundo no es gusto: `#4a5568` sobre
+   `#070b12` da **2,62:1**, muy por debajo del 4,5:1 que exige la WCAG, y a 9,5 px ni siquiera aplica
+   la excepción de «texto grande». `--txt-dim` da 5,77:1. */
+.cw-chat .msgw .t {
+  font-size: 11px;
+  color: var(--txt-dim);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cw-chat .msgw-falla {
+  font-size: 11px;
+  color: var(--crit);
+}
+
+/* El separador de día: centrado sobre la COLUMNA y con aire arriba, que es lo que lo convierte en un
+   separador. Con `margin:4px 0 14px` quedaba pegado al mensaje de arriba y separado del de abajo —
+   o sea, dividiendo en el lugar equivocado. */
+.cw-chat .cw-day {
+  align-self: center;
+  margin: 20px 0 12px;
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+}
+
+.cw-chat > .cw-day:first-child {
+  margin-top: 2px;
+}
+
+/* Los avisos del chat (atraso del barrido, sin mensajes) ocupan el ancho completo: no son mensajes
+   de nadie. Sin esto se encogerían al ancho de su texto, como cualquier hijo de flex. */
+.cw-chat > .fd-aviso,
+.cw-chat > .dw-empty {
+  align-self: stretch;
+  width: 100%;
+}
+
+.cw-chat > .fd-aviso {
+  margin-bottom: 14px;
+}
+
+/* ── 4 · EL COMPOSITOR ───────────────────────────────────────────────────────
+   Mismo eje que todo lo demás, y una caja de verdad alrededor del campo: era un `input` sin fondo
+   flotando sobre el panel, con el botón al lado y nada que dijera dónde empieza la zona de escribir. */
+.cw-input {
+  padding: 12px var(--cw-pad);
+  gap: 9px;
+  align-items: center;
+}
+
+.cw-input input {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--cw-radio-chico);
+  background: var(--bg-sunk);
+  line-height: 1.4;
+}
+
+.cw-input input:focus {
+  border-color: rgb(var(--c-acento) / .35);
+  outline: none;
+}
+
+.cw-input input:disabled {
+  background: transparent;
+  border-color: transparent;
+}
+
+.cw-send {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--cw-radio-chico);
+  border: 1px solid rgb(var(--c-acento) / .22);
+  transition: background .14s ease;
+}
+
+.cw-send:not(:disabled):hover {
+  background: rgb(var(--c-acento) / .2);
+}
+
+.cw-send:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* El aviso pegado al compositor: `margin:0 16px 0` eran tres valores y ningún aire abajo, así que
+   tocaba el borde del campo. */
+.cw .cw-cerrada {
+  margin: 0 var(--cw-pad) 10px;
+}
+
+/* ── 5 · LAS OTRAS CUATRO PESTAÑAS ───────────────────────────────────────────
+   `.kv` es una rejilla `1fr auto` con el valor alineado a la derecha, y sirve perfecto para un
+   número. El Perfil la usaba para texto libre y le apagaba la alineación con un estilo en línea, sin
+   tocar las COLUMNAS: cada fila calculaba su propio corte y los valores arrancaban a 272, 400, 142,
+   472, 311 y 497 px. Seis renglones, seis márgenes distintos.
+
+   Con una columna de etiqueta fija, los valores arrancan todos en el mismo sitio. Y el estilo en
+   línea desaparece del JSX. */
+.cw-body .kv-box {
+  padding: 2px 12px;
+}
+
+.cw-body .kv {
+  grid-template-columns: minmax(0, 104px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 10px 0;
+}
+
+.cw-body .kv span {
+  color: var(--txt-dim);
+  font-size: 11px;
+  line-height: 1.45;
+  padding-top: 1px;
+}
+
+.cw-body .kv b {
+  font-weight: 400;
+  text-align: left;
+  color: var(--txt);
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* El historial: la columna del «hace 2 h» dejaba de estar alineada en cuanto un título medía
+   distinto, porque `margin-left:auto` la empuja contra lo que haya. Con una rejilla de tres columnas
+   la marca de tiempo queda en su carril. */
+.cw-body .ld-time {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  gap: 11px;
+  align-items: start;
+  padding: 11px 0;
+}
+
+.cw-body .ld-dot {
+  margin-top: 5px;
+}
+
+.cw-body .ld-when {
+  margin-left: 0;
+  padding-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Las notas: una clase, no seis estilos en línea con números crudos. */
+.cw-nota {
+  margin-top: 9px;
+  padding: 12px 14px;
+  border-radius: var(--cw-radio);
+}
+
+.cw-nota-cuerpo {
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-line;
+  color: var(--txt);
+  overflow-wrap: anywhere;
+}
+
+.cw-nota-pie {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--txt-dim);
+}
+
+/* ── 6 · AVANZAR ─────────────────────────────────────────────────────────────
+   Las seis tarjetas del resultado traen `class="ic win|money|next|lost"` esperando la pastilla de
+   color del prototipo… que nunca se portó. Medido: las seis salían transparentes y del mismo gris.
+   En una pantalla que se resuelve de un clic, el color ES la señal — «Venta» y «Perdido» no pueden
+   verse igual. */
+.res-o .ic {
+  flex-shrink: 0;
+  background: rgb(var(--c-nube) / .06);
+  color: var(--txt-dim);
+}
+
+.res-o .ic.win {
+  background: rgb(var(--c-ok) / .14);
+  color: var(--ok);
+}
+
+.res-o .ic.money {
+  background: rgb(var(--c-exec) / .14);
+  color: var(--exec);
+}
+
+.res-o .ic.next {
+  background: rgb(var(--c-acento) / .14);
+  color: var(--accent);
+}
+
+.res-o .ic.lost {
+  background: rgb(var(--c-crit) / .13);
+  color: var(--crit);
+}
+
+/* Dentro de `Ventana.jsx` el cuerpo ya trae su propio margen, así que el de la rejilla portada
+   sumaba y las tarjetas quedaban 36,7 px adentro mientras el título del modal empezaba a 14. */
+.vt-cuerpo > .res-g {
+  padding: 0;
+  gap: 10px;
+}
+
+.vt-cuerpo > .res-g .res-o {
+  border-radius: var(--cw-radio, 12px);
+}
+
+.res-o:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Los dos botones de la asistencia. Dos y no un `select` porque la respuesta es binaria y tiene que
+   verse cuál está elegida SIN abrir nada: un desplegable cerrado en «Sin especificar» se parece
+   demasiado a uno cerrado en «Sí», y la diferencia entre esas dos es la cifra entera.
+   `1fr 1fr` para que ninguno parezca el principal: preseleccionar el sí —aunque sea sólo con el
+   ancho— convertiría la pregunta en un trámite. */
+.res-si-no {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ── 7 · UNA CONVERSACIÓN QUE LLEGA SOLA HAY QUE ANUNCIARLA ──────────────────
+   El chat se refresca cada N segundos con su propio reloj. Para quien usa lector de pantalla, los
+   mensajes nuevos aparecían sin que nada lo dijera. `aria-live` lo pone el JSX; acá sólo se deja
+   constancia de que la región existe y de por qué no lleva `assertive`: interrumpir la lectura en
+   curso por cada mensaje entrante es peor que enterarse un momento después. */
+
+/* El aviso de que el refresco contra el CRM no salió, separado del encabezado que lo precede. */
+.cw-aviso-refresco {
+  margin-top: 12px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   8 · EL TEXTO SECUNDARIO SE PUEDE LEER
+   ═════════════════════════════════════════════════════════════════════════════
+   `--txt-faint` es `#4a5568`, y su contraste **no puede** pasar 4,5:1 contra ningún fondo de este
+   tema: contra el más oscuro (`--bg` #05080d) da 2,79:1, que es su techo matemático. No es un
+   ajuste fino, es un token que se usa como color de TEXTO donde tendría que usarse como color de
+   trazo.
+
+   Acá no se toca el token —lo comparten seis vistas más y sería otro trabajo, con su propio
+   antes/después por pantalla— sino los sitios de ESTA superficie donde lo que está apagado es
+   justamente lo que hay que leer. `--txt-dim` (#7d8ca1) da 5,77:1 sobre `--bg-sunk`.
+
+   Y el caso que más molesta decir: `.dw-empty` es el componente `LoQueFalta`, el mecanismo con el
+   que este proyecto cumple su propia regla de que **un dato ausente se dice, no se dibuja vacío**.
+   La frase que existe para que nadie confunda «no hay» con «no se pudo traer» era, a 2,62:1, lo
+   menos legible del panel. */
+.cw-body .dw-empty,
+.cl-page .dw-empty {
+  color: var(--txt-dim);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* El teléfono, bajo el nombre: es un dato, no una marca de agua. */
+.cw-quien .cw-p {
+  color: var(--txt-dim);
+}
+
+/* El motivo por el que el compositor está bloqueado vive en el `placeholder`. A 2,55:1 era el texto
+   más importante y menos legible de la pestaña. */
+.cw-input input::placeholder {
+  color: var(--txt-dim);
+  opacity: 1;
+}
+
+/* El pie de cada evento del historial: quién lo hizo y con qué detalle. */
+.cw-body .ld-m {
+  color: var(--txt-dim);
+}
+
+/* El conteo de cada columna del Pipeline. Su propia píldora ACLARA el fondo, así que quedaba en
+   1,91:1 — el peor de toda la superficie — justo en el número que ES el dato de la columna. Y el
+   comentario de `aios.css` dice «el conteo se dibuja SIEMPRE, incluido el cero: es la mitad visible
+   de la regla»; la regla se cumplía en el DOM y se perdía en la pantalla. */
+.pipe-c {
+  color: var(--txt);
+}
+
+.pipe-vacia {
+  color: var(--txt-dim);
+}
+
+/* ── EL BUSCADOR DE LEADS DEL PIPELINE ───────────────────────────────────────
+ *
+ * Va acá y no solo en `operacion-estetica.css`: **la forma base vive acá y la estética la refina**,
+ * que es la misma división que ya tienen `.fd-aviso` y `.fd-btn`.
+ *
+ * El motivo original era otro y conviene decir que caducó: la hoja de la estética colgaba de
+ * `#v-closer` solo, y `components/closer/Pipeline.jsx` es el MISMO componente en las dos pestañas —
+ * con el estilo solo allá, el Setter estrenaba el `<input>` crudo del navegador, blanco y cuadrado,
+ * en medio de un tablero oscuro. Esa hoja ahora alcanza también al Setter, así que ese peligro se
+ * fue.
+ *
+ * Y esto se queda igual, porque la división base/refinamiento no dependía de eso: `.pipe-buscar`
+ * tiene forma para cualquier lugar donde se dibuje, y la estética le pone su aire donde
+ * corresponde. */
+.pipe-buscar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pipe-buscar > label {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+}
+
+.pipe-buscar-caja {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.pipe-q {
+  width: 260px;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 30px 0 12px;
+  font: inherit;
+  /* 16 px en móvil a propósito: con menos, el navegador de un teléfono hace acercamiento al
+     enfocar el campo y deja la pantalla corrida. Baja a 12,5 en escritorio, más abajo. */
+  font-size: 16px;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  outline: none;
+  transition: border-color 0.14s ease;
+}
+
+@media (min-width: 768px) {
+  .pipe-q {
+    font-size: 12.5px;
+  }
+}
+
+.pipe-q::placeholder {
+  color: var(--txt-faint);
+  opacity: 1;
+}
+
+.pipe-q:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Dentro del campo, para que la cápsula siga siendo una sola forma. */
+.pipe-q-x {
+  position: absolute;
+  right: 3px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--txt-faint);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  transition: color 0.14s ease, background 0.14s ease;
+}
+
+.pipe-q-x:hover {
+  color: var(--txt);
+  background: rgb(var(--c-nube) / 0.1);
+}
+
+.pipe-q-x:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Y se esconde la cruz nativa de `type="search"`: con las dos quedan dos cruces, y la del
+   navegador no sigue el tema — en claro se dibuja oscura sobre oscuro. */
+.pipe-q::-webkit-search-cancel-button {
+  display: none;
+}
+
+.pipe-q-n {
+  font-size: 12px;
+  color: var(--txt-dim);
+}
+
+.pipe-q-n b {
+  color: var(--txt);
+  font-weight: 600;
+}
+
+/* El aviso de que se buscó sobre una lista cortada. Ámbar: es atención, no fallo. */
+.pipe-q-n em {
+  font-style: normal;
+  color: var(--warn);
+}
+
+/* El glifo de cada pestaña, ahora que es un elemento propio: se atenúa él y no el nombre. Y el
+   `gap:7px` que `aios.css` declaraba por fin se cumple — con los dos nodos de texto contiguos que
+   había antes, flexbox los envolvía en UN ítem anónimo y el `gap` no repartía nada. */
+.cw-tabs .cw-tab-g {
+  font-style: normal;
+  opacity: .75;
+}
+
+.cw-tabs button.on .cw-tab-g {
+  opacity: 1;
+}
+
+/* Y el botón de cerrar, que ahora es un `<button>` de verdad: un `<button>` sí trae tipografía del
+   agente de usuario, cosa que el `<span>` no traía. */
+.cw .cw-x {
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* El aviso del panel, más compacto: dos de estos apilados —el refresco del CRM y el atraso del
+   barrido— se comían 150 px de una columna de 720. */
+.cw .fd-aviso {
+  padding: 9px 11px;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   9 · MI DÍA: LA CITA DEL MENSAJE CUELGA DEBAJO DEL CONTACTO EQUIVOCADO
+   ═════════════════════════════════════════════════════════════════════════════
+   `.md-r` es una rejilla `64px 1fr auto` con `gap:14px` y `padding:0 16px`, así que el nombre del
+   contacto arranca a 94 px del borde. `.md-quote` —lo último que dijo esa persona— es hermana de la
+   fila, no hija, así que arranca a 0: medido, **94 px a la izquierda del nombre al que pertenece**.
+   Se lee como si fuera de la fila de arriba, o de nadie.
+
+   Se alinea con la MISMA aritmética de la rejilla en vez de un número copiado, para que el día que
+   la primera columna cambie de ancho esto siga cuadrando. */
+.md-quote {
+  /* 16 del padding de la fila + 64 de la columna de la hora + 14 del hueco. */
+  margin-left: calc(16px + 64px + 14px);
+  padding-right: 16px;
+  overflow-wrap: anywhere;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   10 · EL PIPELINE, VERTICAL
+   ═════════════════════════════════════════════════════════════════════════════
+   Las siete etapas pasaron de columnas al costado a secciones apiladas, con el mismo molde que
+   Mi Día. El motivo entero está en `components/closer/Pipeline.jsx`; acá sólo lo que el molde de
+   Mi Día no trae: el vacío de una etapa, que en Mi Día es un `.dw-empty` suelto y acá va DENTRO de
+   la sección, así que necesita su propio aire. */
+.md-sec > .pipe-vacia {
+  margin: 12px 16px;
+  padding: 14px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL BOTÓN DE REPLEGAR, EN EL ENCABEZADO DE CADA SECCIÓN
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Va acá y no en `aios.css` por el motivo del encabezado de este archivo: esa hoja es el port
+   literal del prototipo, y este botón no existe en el prototipo.
+
+   `margin-left:auto` dentro de un `.md-h` que ya es flex: se va al borde derecho sin mover el
+   título ni el conteo, y sin depender de cuántas cosas haya en el medio. */
+.sec-plegar {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  /* `currentColor` y no un token: el encabezado de una cola crítica es rojo y el de una
+     completada gris, y un color fijo acá haría que la flecha se despegara de su sección. */
+  color: currentColor;
+  opacity: 0.5;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity .14s ease, background .14s ease, transform .18s cubic-bezier(.32, .72, 0, 1);
+}
+.sec-plegar:hover {
+  opacity: 1;
+  background: rgb(var(--c-nube) / 0.09);
+}
+.sec-plegar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+/* Replegada, la MISMA flecha girada. Un segundo glifo sería una segunda fuente de verdad para el
+   mismo estado, y el día que una se olvide la flecha apunta para donde la lista no está. */
+.md-sec.plegada .sec-plegar {
+  transform: rotate(-90deg);
+}
+
+/* Y el borde de abajo del encabezado se va con la lista: sin esto queda una línea de 1 px pegada
+   al borde redondeado de la sección, que se lee como un renglón vacío a medio cargar. */
+.md-sec.plegada .md-h {
+  border-bottom: 0;
+}
+
+/* Y una lista larga no empuja la etapa siguiente fuera de la pantalla: cada sección se desplaza
+   sola a partir de cierto alto. Es lo único que la disposición en columnas hacía bien. */
+.md-sec > .md-r:first-of-type {
+  border-top: 0;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   11 · LA AGENDA: CALENDARIO A LA IZQUIERDA, EL DÍA A LA DERECHA
+   ═════════════════════════════════════════════════════════════════════════════
+   Dos columnas, y la de la izquierda es fija: un calendario tiene siete columnas de ancho conocido,
+   así que estirarlo con el ancho de la ventana sólo lo deforma. La derecha se queda con el resto,
+   que es donde está lo que se lee — los nombres y las horas. */
+.ag {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+/* Por debajo de eso las dos columnas no entran, y un calendario de 320 px al lado de una tarjeta de
+   200 no se lee: pasan a apilarse, con el mes primero. */
+@media (max-width: 900px) {
+  .ag {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ag-lado {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ag-barra {
+  margin-bottom: 12px;
+}
+
+.ag-coste {
+  margin: 0;
+}
+
+/* ── EL MES ──────────────────────────────────────────────────────────────── */
+.ag-mes-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ag-mes-t {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* El mes llega en minúsculas del catálogo —«agosto de 2026»— y se muestra con la inicial en alta.
+   `text-transform: capitalize` pondría mayúscula también en «De», que es lo que se ve en la captura
+   del diseño viejo y está mal en español. */
+.ag-mes-t::first-letter {
+  text-transform: uppercase;
+}
+
+.ag-mes-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.ag-mes-nav button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--txt-dim);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: color .14s ease, background .14s ease, border-color .14s ease;
+}
+
+.ag-mes-nav button:hover {
+  color: var(--txt);
+  background: rgb(var(--c-nube) / .08);
+  border-color: var(--line);
+}
+
+.ag-mes-nav button:focus-visible,
+.ag-celda:focus-visible,
+.ag-prox:focus-visible,
+.ag-sala:focus-visible,
+.ag-mas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ag-grilla {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.ag-sem {
+  display: grid;
+  place-items: center;
+  height: 26px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--txt-dim);
+}
+
+.ag-hueco {
+  height: 38px;
+}
+
+.ag-celda {
+  position: relative;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  color: var(--txt);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: background .14s ease, border-color .14s ease;
+}
+
+.ag-celda:hover:not(:disabled) {
+  background: rgb(var(--c-nube) / .09);
+}
+
+/* Un día leído SIN citas se puede mirar y no se puede abrir: no hay nada que abrir. Queda con el
+   número a plena luz, que es lo que dice «se miró y está libre». */
+.ag-celda:disabled {
+  cursor: default;
+}
+
+/* ── LA DISTINCIÓN QUE SOSTIENE TODA LA PANTALLA ───────────────────────────
+   Un día FUERA de la ventana leída no es un día sin citas. Se apaga hasta quedar claramente en otro
+   plano —no es «vacío», es «no se sabe»— y el motivo se escribe en la leyenda de abajo, porque un
+   color solo no dice qué significa. */
+.ag-celda.sin-leer {
+  color: var(--txt-faint);
+  opacity: .45;
+}
+
+.ag-celda.sin-leer:hover {
+  background: none;
+}
+
+/* HOY, siempre marcado, tenga o no citas: es el ancla de la grilla. */
+.ag-celda.hoy {
+  background: var(--accent);
+  color: var(--sobre-acento);
+  font-weight: 700;
+}
+
+.ag-celda.hoy:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+/* El día ABIERTO, que puede no ser hoy. */
+.ag-celda.abierta:not(.hoy) {
+  border-color: var(--accent);
+  background: rgb(var(--c-acento) / .1);
+}
+
+.ag-punto {
+  position: absolute;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.ag-celda.hoy .ag-punto {
+  background: var(--sobre-acento);
+}
+
+.ag-leyenda {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--txt-dim);
+}
+
+/* ── PRÓXIMOS DÍAS ───────────────────────────────────────────────────────── */
+.ag-proximos-t {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+  margin-bottom: 10px;
+}
+
+.ag-prox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--txt);
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  transition: background .14s ease;
+}
+
+.ag-prox:hover:not(:disabled) {
+  background: rgb(var(--c-nube) / .07);
+}
+
+.ag-prox:disabled {
+  cursor: default;
+}
+
+.ag-prox.on {
+  background: rgb(var(--c-acento) / .1);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ag-prox-n {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* El conteo va en palabras y SIEMPRE, incluido «Sin citas». Ver el JSX: un cero suelto se lee como
+   un dato que falta, y «Sin citas» dice que se miró. */
+.ag-prox-c {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  color: var(--txt-dim);
+  background: rgb(var(--c-nube) / .09);
+}
+
+.ag-prox-c.hay {
+  color: var(--accent);
+  background: rgb(var(--c-acento) / .13);
+}
+
+/* ── EL DÍA ABIERTO ──────────────────────────────────────────────────────── */
+.ag-dia-h {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.ag-dia-t {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.ag-dia-s {
+  font-size: 13px;
+  color: var(--txt-dim);
+}
+
+.ag-vacia {
+  margin: 0;
+}
+
+/* La línea de tiempo: hora, el botón de la sala, y la cita. Es una rejilla y no tres flex anidados
+   para que **las horas queden en su carril**: alineadas contra lo que tengan al lado, la columna
+   bailaría de renglón en renglón según el largo de cada nombre. */
+.ag-linea {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 10px 12px;
+  align-items: start;
+}
+
+.ag-tramo {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: start;
+}
+
+.ag-hora {
+  padding-top: 13px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Una cita que ya pasó no se esconde —sigue siendo lo que ocurrió ese día— pero se dice. */
+.ag-hora.pasada {
+  color: var(--crit);
+}
+
+.ag-sala {
+  margin-top: 8px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--accent);
+  background: rgb(var(--c-acento) / .12);
+  border: 1px solid rgb(var(--c-acento) / .22);
+  border-radius: 9px;
+  transition: background .14s ease;
+}
+
+.ag-sala:hover:not(:disabled) {
+  background: rgb(var(--c-acento) / .2);
+}
+
+/* SE ATENÚA, NO DESAPARECE. Es la regla 3 del encabezado del componente. */
+.ag-sala:disabled {
+  cursor: not-allowed;
+  color: var(--txt-faint);
+  background: rgb(var(--c-nube) / .06);
+  border-color: var(--line);
+}
+
+.ag-cita {
+  border: 1px solid var(--line);
+  border-radius: var(--cw-radio, 12px);
+  background: var(--bg-sunk);
+  transition: border-color .14s ease;
+}
+
+.ag-cita:hover,
+.ag-cita.abierta {
+  border-color: var(--line-strong);
+}
+
+.ag-cita-h {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+}
+
+.ag-cita-av {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--txt-dim);
+  background: rgb(var(--c-nube) / .09);
+  border-radius: 50%;
+}
+
+.ag-cita-quien {
+  flex: 1;
+  min-width: 0;
+}
+
+.ag-cita-n {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ag-cita-m {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ag-mas {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--txt-dim);
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  transition: transform .16s ease, color .14s ease, background .14s ease;
+}
+
+.ag-mas:hover {
+  color: var(--txt);
+  background: rgb(var(--c-nube) / .1);
+}
+
+.ag-cita.abierta .ag-mas {
+  transform: rotate(180deg);
+}
+
+.ag-cita-cuerpo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px 13px 57px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ag-mas,
+  .ag-celda,
+  .ag-prox,
+  .ag-sala {
+    transition: none;
+  }
+}
+
+/* El chip neutro usaba el gris MÁS apagado sobre su propio tinte, que aclara el sustrato: 4,04:1 en
+   tema claro. Sube un escalón de la rampa — sigue leyéndose como secundario y pasa en los dos temas. */
+.tagx.nu {
+  color: var(--txt-dim);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   12 · LAS DOS OPCIONES DE COMISIÓN
+   ═════════════════════════════════════════════════════════════════════════════
+   Los formularios se fueron a ventanas —el motivo está en `components/closer/Comision.jsx`— así
+   que en la columna del anillo sólo quedan los botones. En fila y no apilados: son dos acciones del
+   mismo rango, y una debajo de la otra estira la columna y descuadra el hero. */
+.ck-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.ck-nota {
+  margin: 4px 0 0;
+}
+
+/* ── LOS PORCENTAJES DEL EQUIPO, DENTRO DE LA VENTANA ─────────────────────── */
+.cm-intro {
+  margin-bottom: 12px;
+}
+
+.cm-pie {
+  margin-top: 12px;
+}
+
+/* Sin `card`: el encabezado lo pone la ventana. Queda el marco para que la lista se lea como una
+   tabla y no como texto suelto sobre el fondo del modal. */
+.cm-lista {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-sunk);
+}
+
+/* Nombre · estado actual · controles. Antes iba como estilo en línea. */
+.cm-fila {
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto;
+}
+
+.cm-acciones {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cm-pct {
+  width: 90px;
+}
+
+/* Por debajo de este ancho las tres columnas no entran y los botones se parten: la fila se apila. */
+@media (max-width: 620px) {
+  .cm-fila {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   13 · EL COLOR DE CADA ETAPA DEL PIPELINE
+   ═════════════════════════════════════════════════════════════════════════════
+   Las siete etapas se apilan una debajo de la otra, así que al desplazarse hay que poder reconocer
+   en qué columna se está sin volver a leer el título. Eso es lo que hace el color.
+
+   ── CÓMO ESTÁ ARMADO, Y POR QUÉ ASÍ ─────────────────────────────────────────
+
+   Cada sección lleva `data-etapa="<clave>"`, y esas siete reglas hacen UNA sola cosa: definir dos
+   variables locales, `--etapa` y `--c-etapa`. Todo lo demás —el borde, el tinte del encabezado, el
+   punto, la píldora del conteo— se escribe una vez contra esas dos.
+
+   La alternativa era siete bloques completos, uno por etapa, con el borde y el tinte y el punto
+   repetidos en cada uno. Con eso, cambiar el grosor del borde son siete ediciones y la séptima se
+   olvida: el defecto queda como una etapa que se ve distinta de las otras seis sin que nada falle.
+
+   ── Y EL COLOR NO INFORMA SOLO ──────────────────────────────────────────────
+
+   Cada sección conserva su nombre escrito y su conteo. Siete tonos no los distingue todo el mundo
+   —la deuteranopia confunde el verde de «Ganado» con el naranja de «Seguimiento»— así que el color
+   REFUERZA lo que el texto ya dice. Es la misma regla que en la píldora de cada fila obliga a poner
+   la situación en palabras y no solo en tinte. */
+
+.md-sec[data-etapa='agendado'] {
+  --etapa: var(--etapa-agendado);
+  --c-etapa: var(--c-etapa-agendado);
+}
+
+.md-sec[data-etapa='seguimiento'] {
+  --etapa: var(--etapa-seguimiento);
+  --c-etapa: var(--c-etapa-seguimiento);
+}
+
+.md-sec[data-etapa='cierre'] {
+  --etapa: var(--etapa-cierre);
+  --c-etapa: var(--c-etapa-cierre);
+}
+
+.md-sec[data-etapa='ganado'] {
+  --etapa: var(--etapa-ganado);
+  --c-etapa: var(--c-etapa-ganado);
+}
+
+.md-sec[data-etapa='no_show'] {
+  --etapa: var(--etapa-no-show);
+  --c-etapa: var(--c-etapa-no-show);
+}
+
+.md-sec[data-etapa='nurture'] {
+  --etapa: var(--etapa-nurture);
+  --c-etapa: var(--c-etapa-nurture);
+}
+
+/* Las cinco propias del setter. Las otras tres de su embudo —`agendado`, `nurture` y
+   `descalificado`— usan las reglas de arriba, porque son la misma clave. */
+
+.md-sec[data-etapa='nuevo'] {
+  --etapa: var(--etapa-nuevo);
+  --c-etapa: var(--c-etapa-nuevo);
+}
+
+.md-sec[data-etapa='en_calificacion'] {
+  --etapa: var(--etapa-en-calificacion);
+  --c-etapa: var(--c-etapa-en-calificacion);
+}
+
+.md-sec[data-etapa='calificado'] {
+  --etapa: var(--etapa-calificado);
+  --c-etapa: var(--c-etapa-calificado);
+}
+
+.md-sec[data-etapa='oferta_chica'] {
+  --etapa: var(--etapa-oferta-chica);
+  --c-etapa: var(--c-etapa-oferta-chica);
+}
+
+.md-sec[data-etapa='vendido'] {
+  --etapa: var(--etapa-vendido);
+  --c-etapa: var(--c-etapa-vendido);
+}
+
+.md-sec[data-etapa='descalificado'] {
+  --etapa: var(--etapa-descalificado);
+  --c-etapa: var(--c-etapa-descalificado);
+}
+
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   13-bis · EL COLOR DE CADA COLA DE MI DÍA
+   ═════════════════════════════════════════════════════════════════════════════
+   Se pidió que las colas de Mi Día tengan color como las columnas del Pipeline, y hasta ahora
+   tenían una versión pobre: un `tono` de tres valores donde uno teñía el encabezado, otro solo la
+   píldora del conteo y el tercero apagaba el título. Dos de las cinco colas no tenían ninguno.
+
+   Estas reglas hacen lo mismo que las de arriba y nada más: definir `--etapa` y `--c-etapa`. Todo
+   el trato —el canto, la banda, el punto, la píldora— ya está escrito una vez contra esas dos, así
+   que Mi Día lo hereda entero sin copiar una línea.
+
+   ── EL MISMO COLOR PARA EL MISMO CONCEPTO, Y ES LA DECISIÓN ───────────────────────────
+
+   Tres colas son el mismo concepto que una columna del embudo, y llevan su color:
+
+     · «Agenda de hoy»        → el de `agendado`
+     · «Seguimientos de hoy»  → el de `seguimiento`
+     · «Oportunidades chicas» → el de `oferta_chica` (setter)
+
+   Un contacto en «Seguimientos de hoy» ES uno de la columna Seguimiento: darles dos naranjas
+   distintos —o peor, dos colores distintos— obligaría a aprender dos vocabularios visuales para
+   la misma cosa. Reusar la variable, y no copiar el hex, es lo que mantiene eso cierto cuando
+   alguien ajuste la paleta.
+
+   ── Y LAS QUE NO TIENEN GEMELA ──────────────────────────────────────────────
+
+     · «Intervenciones urgentes» → `--crit`, el rojo de la aplicación. Es el único que ya tenía
+       color, y se conserva: cambiarlo por un tono del embudo bajaría la urgencia a una etapa más.
+     · «Respondieron · buzón general» → el de `nurture`, que la paleta describe como *«frío pero
+       reversible»*: una conversación viva que no es urgente es exactamente eso.
+     · «Conversaciones estancadas» → el de `cierre`, el ámbar de «hay que empujar».
+     · «Completadas hoy» → `--cola-hecho`, y NO el verde de `ganado`: ver su motivo en `temas.css`.
+
+   ── Y EL COLOR SIGUE SIN INFORMAR SOLO ───────────────────────────────────────
+
+   Cada cola conserva su nombre escrito y su conteo, igual que en el Pipeline y por el mismo
+   motivo: cinco tonos no los distingue todo el mundo. El color refuerza, nunca informa solo. */
+
+.md-sec[data-cola='urgentes'] {
+  --etapa: var(--crit);
+  --c-etapa: var(--c-crit);
+}
+
+.md-sec[data-cola='agenda'] {
+  --etapa: var(--etapa-agendado);
+  --c-etapa: var(--c-etapa-agendado);
+}
+
+.md-sec[data-cola='buzon'] {
+  --etapa: var(--etapa-nurture);
+  --c-etapa: var(--c-etapa-nurture);
+}
+
+.md-sec[data-cola='seguimientos'] {
+  --etapa: var(--etapa-seguimiento);
+  --c-etapa: var(--c-etapa-seguimiento);
+}
+
+.md-sec[data-cola='completadas'] {
+  --etapa: var(--cola-hecho);
+  --c-etapa: var(--c-cola-hecho);
+}
+
+/* Las dos propias del setter. `urgentes`, `buzon` y `seguimientos` las comparte con el closer y
+   ya están arriba: las claves son las mismas porque significan lo mismo. */
+.md-sec[data-cola='oportunidades'] {
+  --etapa: var(--etapa-oferta-chica);
+  --c-etapa: var(--c-etapa-oferta-chica);
+}
+
+.md-sec[data-cola='estancadas'] {
+  --etapa: var(--etapa-cierre);
+  --c-etapa: var(--c-etapa-cierre);
+}
+
+/* El canto de color, que es la señal que se ve de reojo al desplazarse. Va a la IZQUIERDA y con
+   3 px: un borde de 1 px se pierde contra el borde propio de la tarjeta. */
+.md-sec[data-etapa],
+.md-sec[data-cola] {
+  border-left: 3px solid var(--etapa);
+}
+
+/* El encabezado teñido. Al 7 % — suficiente para leerse como una banda de color y no tanto como
+   para pelear con el nombre de la etapa, que es el dato. */
+.md-sec[data-etapa] .md-h,
+.md-sec[data-cola] .md-h {
+  background: rgb(var(--c-etapa) / .07);
+  gap: 9px;
+}
+
+/* El punto, antes del nombre. Es la tercera señal —canto, banda, punto— y la que funciona cuando la
+   sección está colapsada contra el borde de la pantalla. */
+.md-sec[data-etapa] .md-h::before,
+.md-sec[data-cola] .md-h::before {
+  content: '';
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--etapa);
+}
+
+/* Y el conteo, en el color de su etapa. El número es lo que más se mira de una columna del Pipeline
+   —«cuántos tengo en Cierre»— así que es donde el color rinde más. */
+.md-sec[data-etapa] .md-h .b,
+.md-sec[data-cola] .md-h .b {
+  background: rgb(var(--c-etapa) / .16);
+  color: var(--etapa);
+}
+
+/* Una etapa VACÍA conserva su color entero: es la mitad visible de la regla que el Pipeline
+   defiende. «Ganado 0» tiene que verse tan Ganado como «Ganado 4», o el cero deja de ser una
+   afirmación y vuelve a ser un hueco. */
+/* El vacío de cada pantalla se llama distinto —`pipe-vacia` en el Pipeline, `dw-empty` en Mi
+   Día— y las dos van acá: la regla es la misma y el nombre de la clase es un accidente. */
+.md-sec[data-etapa] > .pipe-vacia,
+.md-sec[data-cola] > .dw-empty {
+  border-color: rgb(var(--c-etapa) / .28);
+}
+
+/* ── Y LA FORMA DEL PUNTO, QUE ES LO QUE EL COLOR NO PUEDE ARREGLAR ─────────
+   Medido con la matriz de Machado (2009) sobre los siete cantos de color, en el tema oscuro y con
+   la paleta de antes de la marca v2:
+
+     · ganado / descalificado   distancia 195 en visión normal → **24 en deuteranopia**
+     · no_show / nurture        distancia  62 en visión normal → **32 en protanopia**
+
+   O sea que el verde de «Ganado» y el coral de «Descalificado» —el mejor y el peor desenlace, el
+   par más caro de confundir que tiene esta pantalla— se vuelven casi el mismo color para cerca del
+   8 % de los varones. Ningún ajuste de tono lo arregla: son opuestos en el eje rojo-verde, que es
+   justamente el eje que falta.
+
+   Con la paleta apagada de la marca v2 (`temas.css`, 2026-10-01), la misma medida da 78 → 53 para
+   ganado / descalificado y 38 → 44 para no_show / nurture: se confunden menos bajo daltonismo, pero
+   en visión normal ya están mucho más cerca que antes, que es el costo de apagarlas. La forma sigue
+   siendo la señal que no depende del color.
+
+   Así que el punto cambia de FORMA, no solo de color, y las formas se eligen por el grupo semántico
+   que `lib/negocio/etapas.ts` ya define:
+
+     · círculo          las tres en curso — agendado, seguimiento, cierre
+     · círculo lleno    ganado: el desenlace positivo (misma forma, el color lo separa del grupo)
+     · cuadrado         descalificado: el desenlace negativo
+     · rombo            no_show: un hecho operativo, no una resolución
+     · anillo (hueco)   nurture: frío y reversible — la forma más «vacía» de las cinco
+
+   Con esto los dos pares que colapsaban quedan distinguidos sin depender del color: círculo contra
+   cuadrado, y rombo contra anillo. */
+
+.md-sec[data-etapa='descalificado'] .md-h::before {
+  border-radius: 2px;
+}
+
+.md-sec[data-etapa='no_show'] .md-h::before {
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+.md-sec[data-etapa='nurture'] .md-h::before {
+  background: transparent;
+  border: 2px solid var(--etapa);
+  width: 9px;
+  height: 9px;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   14 · LOS CUATRO COLORES QUE VIVÍAN EN EL JSX
+   ═════════════════════════════════════════════════════════════════════════════
+   `Comision.jsx` y `Inicio.jsx` tenían cuatro colores escritos a mano —el carril del arco y los
+   fondos de los tres contadores—. La prueba que prohíbe los literales barre las HOJAS DE ESTILO, no
+   el JSX, así que se colaron por el único camino que no mira: un atributo de SVG y tres
+   `style={{ background: 'rgba(…)' }}`.
+
+   Y el del arco importaba de verdad: `rgba(148,197,255,.08)` es un celeste al 8 %, invisible sobre
+   el blanco del tema claro, así que el anillo de comisión perdía su carril y el arco quedaba
+   flotando sin referencia de cuánto falta.
+
+   `pruebas/codigo/106-etapas-color.test.ts` barre ahora también los JSX de la superficie. */
+.md-ic-crit {
+  background: rgb(var(--c-crit) / .12);
+  color: var(--crit);
+}
+
+.md-ic-acento {
+  background: rgb(var(--c-acento) / .1);
+  color: var(--accent);
+}
+
+.md-ic-warn {
+  background: rgb(var(--c-warn) / .12);
+  color: var(--warn);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   15 · LOS DOS MODOS DE UN SEGUIMIENTO
+   ═════════════════════════════════════════════════════════════════════════════
+   Dos botones y no un desplegable, y la decisión es del componente: las dos opciones hacen cosas
+   disjuntas —una escribe un recordatorio nuestro, la otra dispara una secuencia del CRM— y cada una
+   necesita su renglón de explicación. Un `select` esconde el detalle justo cuando hay que leerlo.
+
+   Se apilan en una columna y no en dos: los textos tienen largos distintos, y en dos columnas el
+   más corto queda con un hueco que se lee como si faltara algo. */
+.av-modos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.av-modo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--txt-dim);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.av-modo b {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--txt);
+}
+
+.av-modo span {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.av-modo:hover {
+  border-color: var(--line-strong);
+}
+
+/* El elegido: canto de acento y fondo teñido. Y `aria-pressed` en el JSX lo dice para quien no ve
+   el color — el estado no puede vivir solo en el borde. */
+.av-modo.on {
+  color: var(--txt);
+  background: rgb(var(--c-acento) / 0.08);
+  border-color: rgb(var(--c-acento) / 0.45);
+}
+
+.av-modo.on b {
+  color: var(--accent);
+}
+
+/* ── LA FILA DE UN CONGELADO ───────────────────────────────────────────
+   Atenuada, y nada más: conserva su chip de fuente, su píldora y sus seis íconos con sus valores
+   reales. Es la misma decisión que la fila completada y por el mismo motivo — resumirla ahorra
+   píxeles y pierde justo lo que permite decidir si hay que volver sobre ese contacto.
+
+   La opacidad es 0,62 y no 0,4: tiene que leerse que está apagada sin que haya que forzar la vista
+   para leer el nombre. Y sigue siendo clicable, porque la ficha sirve igual. */
+.md-r.md-fuera {
+  opacity: 0.62;
+}
+
+.md-r.md-fuera:hover {
+  opacity: 0.85;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOS CLOSERS: LA TABLA DE CONFIGURACIÓN Y EL SELECTOR «VER COMO»
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Era un `<select>` de una fila —había UN closer por empresa hasta la migración 034— y ahora son
+   hasta tres filas con dos columnas: nuestra persona y su usuario en GoHighLevel. */
+
+.ck-closers {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Una fila. En pantalla ancha las cuatro partes van en línea; abajo de 900 px se apilan, porque un
+   desplegable de nombres de usuario del CRM comprimido a 120 px no deja leer ninguno. */
+.ck-closer {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(180px, 1.4fr) auto auto;
+  align-items: start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgb(var(--c-nube) / 0.03);
+}
+@media (max-width: 900px) {
+  .ck-closer {
+    grid-template-columns: 1fr auto;
+  }
+  .ck-closer-crm {
+    grid-column: 1 / -1;
+  }
+}
+
+.ck-closer-quien {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ck-closer-quien b {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--txt);
+}
+.ck-closer-crm,
+.ck-alta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ck-closer-crm select {
+  width: 100%;
+}
+
+.ck-closer-pct {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ck-closer-pct input {
+  width: 84px;
+}
+
+/* La cruz de quitar. Cuadrada y del ancho de su contenido: con el `fd-btn sec` a secas queda del
+   ancho de un botón de texto y se lee como una acción principal, que es lo contrario de lo que es. */
+.ck-quitar {
+  align-self: center;
+  width: 30px;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* El texto de «sin vincular» y el aviso del agente de IA. Ámbar y no rojo: no es un error —una
+   persona sin vincular ve todo, que es un estado que funciona— es algo que hay que saber. */
+.ck-sin-vincular {
+  color: var(--warn);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL BOTÓN `+` DEL COMPOSITOR: EL MENÚ DE LINKS RÁPIDOS
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Va acá y no en `aios.css` por el motivo del encabezado de este archivo: esa hoja es el port
+   literal del prototipo y tiene que seguir siendo comparable contra él. Este botón no existe en el
+   prototipo — es de la aplicación.
+
+   Se dibuja como el hermano callado de `.cw-send`: mismo tamaño y mismo radio, y sin el color de
+   acento. El botón que MANDA es uno solo, y dos controles con el mismo peso visual al lado de la
+   caja harían dudar de cuál es. */
+.cw-mas {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  background: var(--bg-sunk);
+  color: var(--txt-dim);
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.cw-mas:hover:not(:disabled) {
+  background: rgb(var(--c-nube) / 0.09);
+  color: var(--txt);
+  border-color: var(--line-strong);
+}
+/* Apagado igual que el de enviar, y no es cosmético: es la MISMA ventana de 24 horas la que apaga a
+   los dos. Que se vean distinto sugeriría que uno todavía se puede usar. */
+.cw-mas:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.menu-wrap.cw-rapidos.open .cw-mas {
+  border-color: rgb(var(--c-acento) / 0.5);
+  color: var(--accent);
+}
+
+/* HACIA ARRIBA, y no es un gusto: el compositor está pegado al borde de abajo de la ficha, y
+   `.menu-pop` abre hacia abajo por omisión — ahí el menú se sale de la pantalla entero. Es el mismo
+   ajuste que `armazon.css` le hace al menú de la cuenta en el pie del menú lateral.
+
+   Y anclado a la IZQUIERDA, porque el disparador está a la izquierda de la fila: con el `right:0` de
+   base, el menú colgaría del otro extremo del compositor, lejos del botón que lo abrió. */
+.menu-wrap.cw-rapidos .menu-pop {
+  top: auto;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  width: 262px;
+  max-height: min(56vh, 380px);
+  overflow-y: auto;
+  transform: translateY(4px) scale(.98);
+}
+.menu-wrap.cw-rapidos.open .menu-pop {
+  transform: translateY(0) scale(1);
+}
+
+/* El título. El menú se abre SOBRE la conversación, así que sin él lo primero que se ve es una lista
+   de montos flotando encima de los mensajes. */
+.cw-rapidos-t {
+  padding: 7px 10px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--txt-faint);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+/* Cada link: nombre y monto en un renglón, la nota debajo. El monto va a la DERECHA y en cifras
+   alineadas — diez entradas cuyos montos se repiten entre proveedores se eligen mal si hay que leer
+   cada línea entera para encontrarlo. */
+.cw-rapido {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background .13s ease;
+}
+.cw-rapido:hover {
+  background: rgb(var(--c-nube) / 0.07);
+}
+.cw-rapido-n {
+  font-size: 13px;
+  color: var(--txt);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cw-rapido-m {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* El rótulo de la zona, cuando el menú trae las dos. Solo aparece con un contacto congelado —perdió
+   sus etiquetas en el CRM— y ahí es lo único que separa el checkout de $4.000 del calendario. */
+.cw-rapidos-g {
+  padding: 8px 10px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--txt-faint);
+}
+/* Menos el del primer grupo, que ya tiene el título del menú justo encima. */
+.cw-rapidos-g ~ .cw-rapido + .cw-rapidos-g {
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+/* La descripción ocupa las dos columnas: es la línea que termina de distinguir dos links del mismo
+   monto —«pago único» contra «en cuotas»— y recortarla sería perder justo eso. */
+.cw-rapido-d {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--txt-faint);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOS LINKS RÁPIDOS: LA TABLA DE CONFIGURACIÓN
+   ═══════════════════════════════════════════════════════════════════════════
+
+   El prefijo es `er-` y no `ck-`: el panel lo dibujan Closer → Inicio **y** Setter → Inicio, así
+   que un nombre que diga «closer» mentiría en la mitad de sus usos. Las reglas viven igual en esta
+   hoja, que es la capa `components` y ya tiene lo compartido de la ficha. */
+
+.er-lista {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Dos renglones por link: arriba nombre, monto y nota; abajo la dirección entera. La cruz de
+   quitar ocupa las dos filas a la derecha, así que queda a la misma altura sin importar si el
+   enlace ocupó uno o dos renglones. */
+.er-fila {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgb(var(--c-nube) / 0.03);
+}
+/* La columna va EXPLÍCITA junto con la fila. Con solo `grid-row`, la colocación automática mete la
+   cruz en la columna 1 y empuja el nombre a la 2: el resultado es la ✕ a la izquierda y el nombre
+   pegado al borde derecho. Se ve mal y además invierte el orden de lectura. */
+.er-fila .ck-quitar {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  /* Alto explícito: con `align-self:center` heredado y `padding:0`, el botón medía 16 px de alto —un
+     blanco de clic más chico que el ícono que dibuja—. Cuadrado de 30, como su ancho. */
+  height: 30px;
+}
+
+.er-quien {
+  grid-column: 1;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+}
+.er-quien b {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--txt);
+}
+/* El monto con el color de acento y en cifras alineadas, igual que en el menú del chat: es lo
+   que se busca primero al revisar la lista. */
+.er-monto {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.er-nota {
+  font-size: 11px;
+  color: var(--txt-faint);
+}
+
+/* ENTERA, y por eso `word-break`: una dirección de Stripe con parámetros no entra en un renglón,
+   y cortarla con puntos suspensivos taparía justo lo que hay que revisar — dos enlaces del mismo
+   proveedor se diferencian en los últimos caracteres. */
+.er-url {
+  grid-column: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--txt-dim);
+  word-break: break-all;
+  min-width: 0;
+}
+
+/* ── LA CONFIRMACIÓN DE SACAR, EN LA FILA ────────────────────────────────────
+   Ocupa el mismo hueco que la ✕ —columna 2, las dos filas— así que la fila NO cambia de alto al
+   preguntar: el resto de la lista se queda quieto, que es lo que permite leer la pregunta sin
+   perder de vista de qué link es.
+
+   Y por eso mismo la pregunta va en una sola línea con `white-space: nowrap`: si envuelve, la fila
+   crece y empuja las de abajo justo cuando hay que apuntar a un botón. */
+.er-confirmar {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  white-space: nowrap;
+}
+/* El «sí» en el color de peligro, y sólo el texto: un relleno rojo en una lista de seis filas
+   convierte la ventana en una alarma. Es la misma decisión que `ajustes.css` toma para su botón de
+   borrar, con su motivo escrito allá. */
+.er-confirmar .er-si {
+  color: var(--crit);
+}
+
+/* El formulario de alta. Nombre, monto y descripción en tres columnas; el link solo, abajo y a lo
+   ancho, porque es el campo largo y el único que se pega. */
+.er-alta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  background: var(--bg-sunk);
+}
+.er-alta .er-alta-url,
+.er-alta .fd-acciones {
+  grid-column: 1 / -1;
+}
+@media (max-width: 760px) {
+  .er-alta {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* El selector «ver como», arriba del cockpit. Va a la derecha y en línea: es una herramienta de
+   quien administra, y ponerlo centrado le daría el peso de un título. */
+.ck-vercomo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+.ck-vercomo label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--txt-faint);
+}
+.ck-vercomo select {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 6px 10px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * LOS ANALIZADORES · `#v-analizadores`
+ *
+ * La pantalla es lo mínimo que hace funcionar el flujo —la lista, el detalle, el formulario manual— y
+ * por eso sus reglas viven acá y no en una hoja propia: son pocas, son de operación, y una hoja nueva
+ * obliga a anotarla en las dos pruebas de temas el mismo día que se crea.
+ *
+ * Y acá y NO en `operacion-estetica.css`, aunque la pantalla se anote en esa estética: esa hoja es la
+ * de lo COMPARTIDO, y su prueba exige que cada selector alcance a todas las pantallas de operación.
+ * Estas reglas son de una sola.
+ *
+ * Todo acotado a `#v-analizadores`: el prefijo `az-` no lo usa nadie más, pero la regla de la casa es
+ * que una clase de una pantalla no se derrame en otra. Solo tokens de `temas.css` y ni una sombra
+ * (`104-temas`, `107-sin-sombras`).
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+#v-analizadores .az-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+#v-analizadores .az-acciones { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+#v-analizadores .az-boton {
+  font: inherit; font-size: 12.5px; color: var(--txt); background: var(--bg-panel);
+  border: 1px solid var(--line); border-radius: 9px; padding: 6px 12px; cursor: pointer;
+}
+#v-analizadores .az-boton:disabled { opacity: .5; cursor: default; }
+#v-analizadores .az-boton.on { border-color: var(--accent); color: var(--accent); }
+#v-analizadores .az-primario { background: var(--accent); border-color: var(--accent); color: var(--sobre-acento); }
+#v-analizadores .az-peligro { color: var(--crit); }
+#v-analizadores .az-filtros { display: flex; gap: 6px; flex-wrap: wrap; }
+#v-analizadores .az-aviso {
+  font-size: 12px; color: var(--txt-dim); border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px;
+}
+#v-analizadores .az-error { font-size: 12px; color: var(--crit); }
+#v-analizadores .az-lista { display: flex; flex-direction: column; gap: 8px; }
+#v-analizadores .az-fila,
+#v-analizadores .az-bloque {
+  border: 1px solid var(--line); border-radius: 12px; background: var(--bg-panel); padding: 10px 12px;
+}
+#v-analizadores .az-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+#v-analizadores .az-fila-t { font-size: 13px; font-weight: 600; color: var(--txt); }
+#v-analizadores .az-fila-m { font-size: 11.5px; color: var(--txt-dim); }
+#v-analizadores .az-puntaje { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#v-analizadores .az-verde { color: var(--ok); }
+#v-analizadores .az-amarillo { color: var(--warn); }
+#v-analizadores .az-rojo { color: var(--crit); }
+#v-analizadores .az-form { display: flex; flex-direction: column; gap: 8px; }
+#v-analizadores .az-campo {
+  font: inherit; font-size: 12.5px; color: var(--txt); background: var(--bg-panel);
+  /* El borde que separa, no el decorativo: es el límite del campo. */
+  border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 9px;
+}
+#v-analizadores .az-detalle { display: flex; flex-direction: column; gap: 12px; }
+#v-analizadores .az-bloque h3 { margin: 0 0 8px; font-size: 12.5px; font-weight: 700; color: var(--txt); }
+/* `:where` baja la especificidad a la del `#id` solo: sin él, esta regla (1,1,1) le ganaba a
+   `.az-error` y `.az-no-consta` (1,1,0), y «La ficha falló» se pintaba como texto normal. */
+#v-analizadores :where(.az-bloque p) { margin: 4px 0; font-size: 12.5px; color: var(--txt); }
+#v-analizadores .az-cita { border-left: 2px solid var(--line-strong); padding-left: 8px; color: var(--txt-dim); font-style: italic; font-size: 12px; }
+#v-analizadores .az-tiempo { font-size: 11px; color: var(--txt-faint); font-variant-numeric: tabular-nums; }
+#v-analizadores .az-par { display: grid; grid-template-columns: minmax(120px, 200px) 1fr; gap: 4px 12px; font-size: 12px; }
+#v-analizadores .az-no-consta { color: var(--txt-faint); }
+/* El detalle OB: listas de textos cortos y momentos clave con su cita. */
+#v-analizadores .az-renglones { margin: 0; padding-left: 16px; font-size: 12px; color: var(--txt); }
+#v-analizadores .az-renglones li { margin: 2px 0; }
+#v-analizadores .az-momento { margin: 6px 0; font-size: 12.5px; color: var(--txt); }
+
+/* ── EL BRIEF DE LA CITA (AG12 de los agentes) ──────────────────────────────
+ *
+ * `components/closer/BriefDeLaCita.jsx`, dentro de la ficha. Cuatro secciones con títulos chicos y cada dato
+ * en su renglón: el rótulo, el valor y debajo, más tenue, la cita y su fuente. Lo que no consta o es ambiguo
+ * se atenúa: se lee, pero no compite con lo que la persona dijo. Las marcas de Mi Día son las píldoras chicas
+ * de la casa, en mayúsculas como las nombra el Lienzo. */
+.br { display: flex; flex-direction: column; gap: 14px; }
+.br-sec h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--txt-dim); }
+.br-sec ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.br-dato { display: grid; grid-template-columns: minmax(0, 34%) minmax(0, 1fr); gap: 2px 10px; font-size: 12.5px; }
+.br-et { color: var(--txt-dim); }
+.br-val { color: var(--txt); overflow-wrap: anywhere; }
+.br-fuente { grid-column: 2; font-size: 11px; color: var(--txt-faint); overflow-wrap: anywhere; }
+.br-no_consta .br-val,
+.br-ambiguo .br-val { color: var(--txt-faint); }
+.br-marca { font-style: normal; color: var(--txt-faint); }
+.br-vacio { font-size: 12px; color: var(--txt-faint); }
+.br-nota { margin: 6px 0 0; font-size: 11.5px; color: var(--txt-dim); }
+.br-sug,
+.br-preg { margin: 6px 0 0; font-size: 12.5px; color: var(--txt); line-height: 1.45; }
+.br-nuevos { align-items: center; }
+.br-nuevos .fd-btn { margin-left: auto; padding: 5px 10px; }
+.br-regenerar { align-self: flex-start; padding: 6px 12px; }
+.br-marcas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.br-chip { font-size: 9.5px; letter-spacing: .05em; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--txt-dim); }
+.br-listo { border-color: rgb(var(--c-acento) / .5); color: var(--accent); }
+
+/* En el teléfono, el rótulo arriba del valor: dos columnas en 375 px parten cada palabra. */
+@media (max-width: 760px) {
+  .br-dato { grid-template-columns: minmax(0, 1fr); }
+  .br-fuente { grid-column: 1; }
+}

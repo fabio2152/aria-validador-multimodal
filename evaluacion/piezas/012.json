@@ -1,0 +1,11 @@
+{
+  "id": "012",
+  "formato_destino": "feed",
+  "copy": "Haci lo hicimos: aprendimos que un buen cierre depende del proseso.",
+  "guion": "",
+  "conforme": false,
+  "reglas_esperadas": [
+    "MARCA-ORT-01"
+  ],
+  "nota": "Errores de ortografía introducidos en el copy"
+}

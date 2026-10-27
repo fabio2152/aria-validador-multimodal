@@ -1,0 +1,127 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
+:root{--bg:#05080d;--bg-sunk:#070b12;--bg-panel:#0b111b;--bg-raise:#101825;--bg-float:#141d2c;--line:rgba(148,197,255,.08);--line-strong:rgba(148,197,255,.16);--txt:#dbe7f4;--txt-dim:#7d8ca1;--txt-faint:#4a5568;--accent:#35e0d2;--accent-dim:rgba(53,224,210,.12);--exec:#e8b64c;--exec-dim:rgba(232,182,76,.12);--warn:#f0884c;--crit:#f05c5c;--ok:#4ade80;--dev:#8b7cf6;--font:-apple-system,'Inter',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);font-size:13px;width:1440px;height:760px;overflow:hidden;display:grid;grid-template-columns:208px 1fr;grid-template-rows:48px 1fr 62px}
+.brand{grid-row:1;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 14px;font-weight:700;font-size:16px;background:var(--bg-sunk)}
+.logo{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#35e0d2,#1f9f96);color:#05080d;display:grid;place-items:center;font-size:12px;font-weight:800}
+.top{grid-row:1;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:var(--txt-dim);background:var(--bg-sunk)}
+.top b{color:var(--txt);font-weight:500}.top .r{display:flex;gap:8px}.av{width:28px;height:28px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:10px;color:var(--txt-dim)}
+nav{grid-row:2/4;border-right:1px solid var(--line);padding:12px 12px;background:var(--bg-sunk);display:flex;flex-direction:column}
+.org{border:1px solid var(--line-strong);border-radius:10px;padding:9px 10px;display:flex;gap:9px;align-items:center;margin-bottom:14px;background:var(--bg-panel)}
+.org .ic{width:26px;height:26px;border-radius:7px;background:var(--accent-dim);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:10px}
+.org b{display:block;font-size:12.5px}.org small{color:var(--txt-dim);font-size:10.5px}
+.it{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;color:var(--txt-dim);font-size:13px;margin-bottom:2px}
+.it i{width:14px;height:14px;border:1.5px solid currentColor;border-radius:4px;opacity:.8}
+.it.on{background:var(--accent-dim);color:var(--txt);box-shadow:inset 2px 0 0 var(--accent)}.it.on i{color:var(--accent)}
+.it .new{margin-left:auto;font-size:9px;color:var(--accent);border:1px solid rgba(53,224,210,.35);border-radius:999px;padding:1px 6px}
+.sec{font-size:10.5px;color:var(--txt-faint);font-weight:600;margin:14px 0 6px 10px;letter-spacing:.02em}
+.hr{height:1px;background:var(--line);margin:8px 0}
+.foot{margin-top:auto;border-top:1px solid var(--line);padding-top:10px}
+main{grid-row:2;display:grid;grid-template-columns:1fr 300px;overflow:hidden}
+.center{padding:16px 20px;overflow:hidden}
+h1{font-size:19px;font-weight:700;margin-bottom:10px}
+.tabs{display:inline-flex;border:1px solid var(--line-strong);border-radius:10px;padding:3px;margin-bottom:14px;background:var(--bg-panel)}
+.tabs span{padding:5px 12px;border-radius:7px;color:var(--txt-dim);font-size:12px}.tabs .on{background:var(--bg-float);color:var(--txt)}
+.card{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.ingreso{display:grid;grid-template-columns:1fr 1fr 1.3fr auto;gap:10px;padding:12px;margin-bottom:12px;align-items:stretch}
+.fld label{display:block;font-size:10.5px;color:var(--txt-dim);margin-bottom:5px;font-weight:600}
+.box{border:1px solid var(--line-strong);border-radius:8px;background:var(--bg-sunk);padding:8px 10px;font-size:12px;color:var(--txt);height:52px;display:flex;align-items:center}
+.drop{border-style:dashed;color:var(--txt-dim);justify-content:center;gap:6px}
+.box.copy{align-items:flex-start;line-height:1.35;font-size:11.5px}
+.btn{align-self:end;background:var(--accent);color:#04201e;font-weight:700;border-radius:8px;padding:0 16px;height:52px;display:flex;align-items:center;font-size:12.5px}
+.res{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:12px}
+.thumb{width:150px;height:266px;border-radius:10px;background:linear-gradient(180deg,#1b2638,#0d1420 60%,#121b2a);border:1px solid var(--line-strong);position:relative;overflow:hidden}
+.thumb .person{position:absolute;left:38px;top:62px;width:74px;height:74px;border-radius:50%;background:#26354b}
+.thumb .body{position:absolute;left:22px;top:128px;width:106px;height:100px;border-radius:40px 40px 0 0;background:#223047}
+.thumb .sub{position:absolute;left:10px;right:10px;bottom:34px;background:rgba(0,0,0,.55);color:#fff;font-size:9.5px;text-align:center;padding:4px;border-radius:4px;font-weight:600}
+.thumb .play{position:absolute;right:8px;top:8px;font-size:9px;color:var(--txt-dim);background:rgba(0,0,0,.5);padding:2px 6px;border-radius:4px}
+.meta{font-family:var(--mono);font-size:10.5px;color:var(--txt-dim);margin-top:7px;line-height:1.5}
+.sum{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.risk{background:var(--exec-dim);color:var(--exec);border:1px solid rgba(232,182,76,.4);border-radius:8px;padding:6px 12px;font-weight:700;font-size:12px;letter-spacing:.04em}
+.chip{border:1px solid var(--line-strong);border-radius:999px;padding:4px 10px;font-size:11px;color:var(--txt-dim)}.chip b{color:var(--txt)}
+.ver{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--txt-faint)}
+.h{display:grid;grid-template-columns:3px 1fr auto;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg-raise);margin-bottom:7px}
+.bar{border-radius:3px}.alta{background:var(--crit)}.media{background:var(--warn)}.baja{background:var(--txt-faint)}
+.h .t{font-weight:600;font-size:12.5px;margin-bottom:3px}
+.tag{font-size:9.5px;font-weight:700;border-radius:4px;padding:1px 6px;margin-right:6px;letter-spacing:.03em}
+.tp{background:rgba(240,92,92,.13);color:var(--crit)}.tm{background:var(--accent-dim);color:var(--accent)}
+.rid{font-family:var(--mono);font-size:10px;color:var(--txt-faint)}
+.ev{font-size:11.5px;color:var(--txt-dim);margin-top:4px;line-height:1.4}.ev .qq{color:var(--txt);font-style:italic}
+.sg{font-size:11px;color:var(--ok);margin-top:3px}
+.fb{display:flex;flex-direction:column;gap:5px;justify-content:center}
+.fb span{font-size:10.5px;border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;color:var(--txt-dim);text-align:center}
+.fb .yes{border-color:rgba(74,222,128,.4);color:var(--ok)}
+aside{border-left:1px solid var(--line);padding:16px 14px;overflow:hidden}
+.pc{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;margin-bottom:12px}
+.pc .hd{display:flex;justify-content:space-between;padding:11px 12px;border-bottom:1px solid var(--line);font-weight:700;font-size:12.5px}.pc .hd small{color:var(--txt-faint);font-weight:500}
+.row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px}
+.row:last-child{border-bottom:0}.row .n{margin-left:auto;font-family:var(--mono);color:var(--txt)}
+.lb{width:3px;height:22px;border-radius:2px}
+.meter{height:4px;border-radius:2px;background:var(--bg-float);margin:0 12px 10px;overflow:hidden}.meter div{height:100%;background:var(--warn)}
+.add{color:var(--accent);font-size:12px;padding:9px 12px}
+.ask{grid-column:2;display:flex;justify-content:center;align-items:center;border-top:1px solid var(--line);background:var(--bg-sunk)}
+.ask div{width:540px;border:1px solid var(--line-strong);border-radius:12px;padding:10px 14px;color:var(--txt-dim);background:var(--bg-panel);display:flex;justify-content:space-between;font-size:12.5px}
+.ask b{color:var(--txt)}.k{font-size:10px;border:1px solid var(--line-strong);border-radius:5px;padding:1px 6px}
+</style></head><body>
+<div class="brand"><div class="logo">A</div>AIOS</div>
+<div class="top"><div>AIOS &nbsp;/&nbsp; Creative &nbsp;/&nbsp; <b>Validador de contenido</b></div><div class="r"><div class="av">⚑</div><div class="av">GI</div></div></div>
+<nav>
+ <div class="org"><div class="ic">AH</div><div><b>ARIA High Ticket</b><small>ARIA IA</small></div></div>
+ <div class="it"><i></i>Executive</div><div class="it"><i></i>Leads Portal</div><div class="it"><i></i>ICP &amp; Oferta</div>
+ <div class="hr"></div><div class="sec">Inteligencia</div>
+ <div class="it"><i></i>Acquisition</div><div class="it"><i></i>Creative</div>
+ <div class="it on"><i></i>Validador<span class="new">nuevo</span></div>
+ <div class="it"><i></i>Conversion</div><div class="it"><i></i>Conversation</div><div class="it"><i></i>Sales</div>
+ <div class="hr"></div><div class="sec">Operación</div>
+ <div class="it"><i></i>Setter</div><div class="it"><i></i>Closer</div>
+ <div class="foot"><div class="it"><span class="av" style="width:22px;height:22px;border-radius:6px">GI</span>Gabriel · Marketing</div><div class="it"><i></i>Ajustes</div></div>
+</nav>
+<main>
+ <div class="center">
+  <h1>Validador de contenido</h1>
+  <div class="tabs"><span class="on">Nuevo análisis</span><span>Historial</span><span>Reglas de marca</span></div>
+  <div class="card ingreso">
+   <div class="fld"><label>CARGAR PIEZA</label><div class="box drop">⇪ Arrastra un clip o imagen</div></div>
+   <div class="fld"><label>O ENLACE DE GOOGLE DRIVE</label><div class="box" style="color:var(--txt-dim);font-family:var(--mono);font-size:11px">drive.google.com/file/d/1aX…</div></div>
+   <div class="fld"><label>COPY DE LA PUBLICACIÓN</label><div class="box copy">En 30 días puedes duplicar tu facturación. ¡Escríbenos ya, quedan pocos cupos!</div></div>
+   <div class="btn">Analizar pieza</div>
+  </div>
+  <div class="card res">
+   <div><div class="thumb"><div class="play">▶ 0:48</div><div class="person"></div><div class="body"></div><div class="sub">"vas a facturar el doble"</div></div>
+    <div class="meta">reel_autoridad_03.mp4<br>0:48 · 1080×1920 · 9:16</div></div>
+   <div>
+    <div class="sum"><div class="risk">RIESGO MEDIO</div><div class="chip">Marca <b>2</b></div><div class="chip">Plataforma <b>1</b></div><div class="ver">corpus v1.3 · 40 reglas</div></div>
+    <div class="h"><div class="bar alta"></div><div><div class="t"><span class="tag tp">PLATAFORMA</span>Promesa de ingresos poco realista</div>
+     <div class="rid">META-PUB-07 · severidad alta · transcripción 0:12–0:16</div>
+     <div class="ev">Evidencia: <span class="qq">“en 30 días vas a facturar el doble sin hacer más”</span></div>
+     <div class="sg">Sugerencia: presentar el resultado como caso documentado, sin plazo ni garantía.</div></div>
+     <div class="fb"><span class="yes">✓ Correcto</span><span>✗ Incorrecto</span></div></div>
+    <div class="h"><div class="bar media"></div><div><div class="t"><span class="tag tm">MARCA</span>Tono fuera de autoridad</div>
+     <div class="rid">MARCA-TONO-02 · severidad media · copy</div>
+     <div class="ev">Evidencia: <span class="qq">“¡Escríbenos ya, quedan pocos cupos!”</span> transmite que la marca persigue al cliente.</div>
+     <div class="sg">Sugerencia: invitar a evaluar el caso propio, sin urgencia artificial.</div></div>
+     <div class="fb"><span>✓ Correcto</span><span>✗ Incorrecto</span></div></div>
+    <div class="h"><div class="bar baja"></div><div><div class="t"><span class="tag tm">MARCA</span>Ortografía en subtítulo</div>
+     <div class="rid">MARCA-ORT-01 · severidad baja · verificación determinística · 0:31</div>
+     <div class="ev">Evidencia: <span class="qq">“haci”</span> → corregir a <span class="qq">“así”</span></div></div>
+     <div class="fb"><span>✓ Correcto</span><span>✗ Incorrecto</span></div></div>
+   </div>
+  </div>
+ </div>
+ <aside>
+  <div class="pc"><div class="hd">Errores recurrentes <small>últimos 30 días</small></div>
+   <div class="row"><div class="lb" style="background:var(--warn)"></div>Tono fuera de autoridad<span class="n">9</span></div>
+   <div class="row"><div class="lb" style="background:var(--warn)"></div>Puntos de corte del clip<span class="n">6</span></div>
+   <div class="row"><div class="lb" style="background:var(--txt-faint)"></div>Copy<span class="n">4</span></div>
+   <div class="row"><div class="lb" style="background:var(--crit)"></div>Promesas de ingresos<span class="n">2</span></div></div>
+  <div class="pc"><div class="hd">Primera revisión <small>este mes</small></div>
+   <div class="row" style="border:0">Piezas sin hallazgos<span class="n">58%</span></div><div class="meter"><div style="width:58%"></div></div></div>
+  <div class="pc"><div class="hd">Restricciones de marca <small>3 activas</small></div>
+   <div class="row">No transmitir que buscamos clientes</div>
+   <div class="row">No copiar trends ni edits virales</div>
+   <div class="row">No prometer resultados sin caso real</div>
+   <div class="add">+ Agregar restricción</div></div>
+ </aside>
+</main>
+<div class="ask"><div><span>◈ &nbsp;Pregúntale a Executive sobre <b>Validador</b></span><span class="k">⌘K</span></div></div>
+</body></html>

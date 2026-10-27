@@ -1,0 +1,12 @@
+{
+  "id": "002",
+  "formato_destino": "feed",
+  "copy": "¿Tu agencia está quebrando? Si no actúas hoy, mañana será tarde.",
+  "guion": "",
+  "conforme": false,
+  "reglas_esperadas": [
+    "META-PUB-02",
+    "MARCA-TONO-03"
+  ],
+  "nota": "Atributo personal del destinatario y miedo como gancho; pieza solo de texto"
+}

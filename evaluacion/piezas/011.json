@@ -1,0 +1,11 @@
+{
+  "id": "011",
+  "formato_destino": "feed",
+  "copy": "Un proceso comercial ordenado empieza por entender a tu cliente ideal. Te explicamos el método que usamos.",
+  "guion": "",
+  "conforme": false,
+  "reglas_esperadas": [
+    "FMT-02"
+  ],
+  "nota": "Imagen de 800 × 800 px, debajo del mínimo de 1080"
+}

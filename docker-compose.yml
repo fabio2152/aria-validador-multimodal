@@ -1,0 +1,34 @@
+# MAQUETA: el mismo PostgreSQL efímero de ARIA, con otro contenedor, otra base y otro puerto, para
+# que las dos convivan en la misma máquina (ARIA usa `aria_base` en 55432). Y un servicio más: la
+# ortografía de la capa determinística.
+
+services:
+  base:
+    # La versión MAYOR coincide con la de ARIA y con la del PostgreSQL administrado (17.4).
+    image: postgres:17-alpine
+    # Nombre fijo para que los guiones lo puedan esperar sin adivinar el prefijo de Compose.
+    container_name: aria_validador_base
+    environment:
+      POSTGRES_PASSWORD: postgres_local
+      POSTGRES_DB: validador
+      # Determinismo: sin esto la imagen toma la localización del anfitrión.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+      LANG: C
+    ports:
+      # 55433 y no 55432: no pisa el de ARIA. Atado a 127.0.0.1, no expuesto en la red.
+      - "127.0.0.1:55433:5432"
+    # SIN `volumes:` a propósito, como en ARIA: `docker compose down -v` se lleva todo.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d validador && psql -U postgres -d validador -c 'select 1' > /dev/null"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  # La ortografía de `MARCA-ORT-01`. Un servicio y no una dependencia de npm: corre en Java, y si no
+  # responde el análisis sigue igual con la advertencia «Ortografía no verificada».
+  lenguaje:
+    image: erikvl87/languagetool
+    container_name: aria_validador_lenguaje
+    ports:
+      - "127.0.0.1:8010:8010"

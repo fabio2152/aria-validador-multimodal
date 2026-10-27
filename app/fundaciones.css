@@ -1,0 +1,2092 @@
+/* Etapa 9 · Fundaciones — los estilos de la pantalla ICP & Oferta.
+   ============================================================================
+   POR QUÉ ESTO NO ESTÁ EN `aios.css`
+
+   `aios.css` es la hoja del prototipo, íntegra y sin tocar, y es la única fuente de verdad
+   de los tokens. La regla del proyecto es no editarla: cualquier línea agregada ahí deja de
+   ser diffeable contra `aios-command-center_1.html`, que es la referencia con la que se
+   compara el port.
+
+   Así que acá no hay ni un color literal. Todo sale de los tokens de `aios.css`, y lo que se
+   agrega son las piezas que el prototipo nunca tuvo, porque era un tablero de lectura y no
+   tenía un solo formulario: campos, botón de generar, y el documento largo.
+
+   Se importa en la capa `components`, que va DESPUÉS de `aios` en el orden de capas de
+   `globals.css`. Sin eso, el reset `* { margin:0; padding:0 }` de la hoja original ganaría
+   sobre estos márgenes.
+   ========================================================================= */
+
+/* ── El envoltorio y las subpestañas ─────────────────────────────────────── */
+
+/* Las subpestañas reutilizan `.cl-sub` del cockpit del Closer: es el patrón de pestañas
+   que el diseño ya tiene, y hacer otro daría dos gramáticas para la misma cosa. Lo único
+   que cambia es que son siete y tienen que poder envolverse en pantallas angostas. */
+.fd-sub {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.fd-sub button {
+  gap: 7px;
+}
+/* El número del paso. Es el orden del MÉTODO, no el orden de los identificadores. */
+.fd-sub .fd-n {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--txt-faint);
+  min-width: 11px;
+  text-align: right;
+}
+.fd-sub button.on .fd-n {
+  color: var(--accent);
+}
+/* Hecho: un punto, no un ✓ grande. La pestaña sigue siendo la pestaña. */
+.fd-sub .fd-hecho {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 6px rgb(var(--c-ok) / 0.5);
+}
+
+/* La pestaña de VISTA de Tools (Mis Leads, el Espía, el Scraper) llevaba borde y fondo siempre, y la
+   raya la separaba del recorrido numerado. Se fueron con la barra propia de Tools en la etapa E11 de
+   la nueva estructura: sus pestañas son entradas de los departamentos. */
+
+.fd-avance {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--txt-dim);
+}
+.fd-avance .fd-barra {
+  width: 96px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--bg-sunk);
+  overflow: hidden;
+}
+.fd-avance .fd-barra i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), rgb(var(--c-acento) / 0.4));
+}
+.fd-avance b {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--txt);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── La cabecera de la herramienta ───────────────────────────────────────── */
+
+.fd-cab {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 0 2px;
+}
+.fd-cab h3 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--txt);
+}
+.fd-cab .fd-bajada {
+  font-size: 12.5px;
+  color: var(--txt-dim);
+  line-height: 1.5;
+  max-width: 720px;
+}
+.fd-cab .fd-mas {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.fd-cab .fd-detalle {
+  font-size: 12px;
+  color: var(--txt-dim);
+  line-height: 1.6;
+  max-width: 720px;
+  padding: 9px 11px;
+  border-left: 2px solid var(--line-strong);
+  background: var(--bg-sunk);
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── Lo que hereda la herramienta ────────────────────────────────────────── */
+
+.fd-herencia {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--txt-faint);
+}
+.fd-herencia .fd-etq {
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+.fd-fuente {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--bg-sunk);
+  color: var(--txt-dim);
+  cursor: pointer;
+}
+.fd-fuente:hover {
+  border-color: var(--line-strong);
+  color: var(--txt);
+}
+.fd-fuente b {
+  font-weight: 600;
+  color: var(--txt);
+}
+.fd-fuente.ok {
+  border-color: rgb(var(--c-acento) / 0.3);
+  background: var(--accent-dim);
+}
+.fd-fuente.ok b {
+  color: var(--accent);
+}
+/* Falta y hace falta: coral. No bloquea — genera igual, con marcadores [COMPLETAR]. */
+.fd-fuente.falta {
+  border-style: dashed;
+  border-color: rgb(var(--c-crit) / 0.32);
+  color: var(--crit);
+}
+.fd-fuente.falta b {
+  color: var(--crit);
+}
+
+.fd-aviso {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid var(--line);
+  background: var(--bg-sunk);
+  color: var(--txt-dim);
+}
+.fd-aviso i {
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.fd-aviso.falta {
+  border-color: rgb(var(--c-warn) / 0.28);
+  color: var(--warn);
+}
+.fd-aviso.mal {
+  border-color: rgb(var(--c-crit) / 0.3);
+  color: var(--crit);
+}
+/* Un fallo del modelo trae su código en una segunda línea (`mensajeDeRechazo`): se respeta el salto. */
+.fd-aviso.mal > span {
+  white-space: pre-line;
+}
+.fd-aviso b {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* ── El formulario ───────────────────────────────────────────────────────── */
+
+.fd-rejilla {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 11px;
+}
+.fd-rejilla.dos {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 1180px) {
+  .fd-rejilla.dos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fd-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.fd-campo label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--txt-dim);
+}
+.fd-campo input,
+.fd-campo select,
+.fd-campo textarea {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  padding: 9px 11px;
+  outline: 0;
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+}
+.fd-campo textarea {
+  min-height: 74px;
+  line-height: 1.55;
+}
+.fd-campo input::placeholder,
+.fd-campo textarea::placeholder {
+  color: var(--txt-faint);
+}
+/* El desplegable entró con el VSL. Hereda la caja de `input` y agrega lo suyo: sin
+   `appearance: none` el navegador pinta su propio control, que en macOS ignora el fondo y
+   el borde y aparece un cuadro blanco en medio de la pantalla oscura. La flecha va como
+   imagen de fondo y NO como un carácter en un pseudo-elemento: un `::after` sobre un
+   `select` no se pinta en ningún navegador. Ni un color literal — `currentColor` en el SVG
+   sigue al token de texto, así que la flecha cambia sola con el tema. */
+.fd-campo select {
+  appearance: none;
+  padding-right: 30px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23ffffff' stroke-opacity='.55' stroke-width='1.5'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 11px;
+}
+/* Las opciones las pinta el sistema operativo, no esta hoja. Sin esto, en Windows el menú
+   abierto sale con texto claro sobre fondo claro. */
+.fd-campo select option {
+  background: var(--bg-sunk);
+  color: var(--txt);
+}
+.fd-campo input:focus,
+.fd-campo select:focus,
+.fd-campo textarea:focus {
+  border-color: rgb(var(--c-acento) / 0.4);
+  box-shadow: 0 0 14px rgb(var(--c-acento) / 0.08);
+}
+
+/* ── Los botones ─────────────────────────────────────────────────────────── */
+
+.fd-acciones {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.fd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--bg);
+  background: linear-gradient(180deg, var(--accent), rgb(var(--c-acento) / 0.82));
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 15px;
+  cursor: pointer;
+  box-shadow: var(--sh-1);
+}
+.fd-btn:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.fd-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.fd-btn.sec {
+  color: var(--txt-dim);
+  background: var(--bg-raise);
+  border: 1px solid var(--line-strong);
+  font-weight: 500;
+  box-shadow: none;
+}
+.fd-btn.sec:hover:not(:disabled) {
+  color: var(--txt);
+  border-color: rgb(var(--c-nube) / 0.28);
+  filter: none;
+}
+.fd-guardado {
+  font-size: 11px;
+  color: var(--txt-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── El veredicto ────────────────────────────────────────────────────────── */
+
+.fd-veredicto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
+}
+.fd-veredicto > div {
+  background: var(--bg-raise);
+  padding: 11px 13px;
+}
+.fd-veredicto .fd-vt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.fd-veredicto .fd-vc {
+  font-size: 12.5px;
+  color: var(--txt);
+  line-height: 1.5;
+  margin-top: 5px;
+}
+
+/* El contraste del ICP: "Dónde están hoy" | "Dónde quieren estar". Mismo cuerpo que el veredicto,
+   pero vive en mitad del documento, donde el modelo puso el <icp-mirror>. */
+.fd-espejo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.fd-espejo > div {
+  background: var(--bg-raise);
+  padding: 11px 13px;
+}
+.fd-espejo .fd-vt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+  margin-bottom: 4px;
+}
+.fd-espejo > div + div .fd-vt {
+  color: var(--ok);
+}
+
+/* ── El documento ────────────────────────────────────────────────────────── */
+
+.fd-doc-cab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fd-doc-cab .fd-titulo {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--txt);
+}
+.fd-doc-cab .fd-meta {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--txt-faint);
+  font-variant-numeric: tabular-nums;
+}
+.fd-doc-cab .fd-der {
+  margin-left: auto;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.fd-mini {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--txt-dim);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.fd-mini:hover {
+  color: var(--txt);
+  border-color: var(--line-strong);
+}
+.fd-mini.on {
+  color: var(--accent);
+  border-color: rgb(var(--c-acento) / 0.32);
+}
+
+/* El menú de descarga: Word, PDF y Markdown.
+   ==========================================================================
+   Es el puerto del menú del hub (`DownloadButton.tsx`). Flota sobre el documento, así que hay dos
+   cosas que se ven mal si faltan y ninguna da error:
+
+   · **El borde no es decoración.** En el tema claro `--bg-panel` y `--bg-raise` son los dos
+     `#ffffff` (ver `temas.css`), y sin `--line-strong` el menú sería un rectángulo blanco invisible
+     sobre fondo blanco. Y no se puede resolver con una sombra: están apagadas en todo el proyecto y
+     una regla acá le ganaría al barrido por especificidad — es el caso 3 de `107-sin-sombras`.
+   · **La superficie es la de `.menu-pop`** (`aios.css`), que es el molde de todo desplegable del
+     proyecto: el degradado `--bg-flota` → `--bg-panel` y el hover `rgb(var(--c-nube) / .07)`, que
+     es el velo que se da vuelta solo entre los dos temas. Inventar otra superficie acá daría dos
+     menús que se ven distinto sin que nadie lo haya decidido. */
+.fd-menu-ancla {
+  position: relative;
+  display: inline-block;
+}
+/* Tapa la pantalla para cerrar al hacer clic afuera. Por debajo del menú y por encima de todo lo
+   demás; sin fondo propio, porque oscurecer la pantalla por abrir un menú de tres ítems es de más. */
+.fd-menu-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+}
+.fd-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  z-index: 200;
+  min-width: 156px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  background: linear-gradient(180deg, var(--bg-flota), var(--bg-panel));
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+}
+.fd-menu button {
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  color: var(--txt-dim);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+.fd-menu button:hover {
+  color: var(--txt);
+  background: rgb(var(--c-nube) / 0.07);
+}
+
+.fd-doc {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--txt);
+  max-height: 640px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+}
+.fd-doc .fd-h {
+  font-weight: 600;
+  color: var(--txt);
+  letter-spacing: -0.015em;
+}
+.fd-doc .fd-h1 {
+  font-size: 17px;
+  margin: 4px 0 10px;
+}
+.fd-doc .fd-h2 {
+  font-size: 14.5px;
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.fd-doc .fd-h3 {
+  font-size: 13px;
+  margin: 14px 0 6px;
+  color: var(--accent);
+}
+.fd-doc .fd-h4 {
+  font-size: 12.5px;
+  margin: 11px 0 5px;
+  color: var(--txt-dim);
+}
+.fd-doc .fd-p {
+  margin: 5px 0;
+}
+.fd-doc .fd-aire {
+  height: 7px;
+}
+.fd-doc .fd-lista {
+  list-style: none;
+  margin: 6px 0 6px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fd-doc .fd-lista li {
+  position: relative;
+  padding-left: 15px;
+  color: var(--txt);
+}
+.fd-doc .fd-lista li::before {
+  content: '·';
+  position: absolute;
+  left: 3px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.fd-doc .fd-num li::before {
+  content: '';
+}
+.fd-doc .fd-num li {
+  padding-left: 4px;
+}
+.fd-doc .fd-num li b {
+  color: var(--accent);
+  font-weight: 600;
+  margin-right: 3px;
+}
+.fd-doc strong {
+  font-weight: 600;
+  /* El texto fuerte de un documento, sobre el panel: `--txt`. Decía `--sobre-lleno`, que es el texto
+     ENCIMA de un relleno de color y desde la marca v2 es casi negro: acá habría desaparecido. */
+  color: var(--txt);
+}
+.fd-doc em {
+  font-style: normal;
+  color: var(--txt-dim);
+}
+
+/* Una tabla ancha hace scroll DENTRO de su caja. Sin esto, un documento con una tabla de
+   ocho columnas empuja el ancho de la vista entera y aparece una barra horizontal en la
+   página, que es el único scroll que este diseño no tiene en ningún lado. */
+.fd-doc .fd-tabla {
+  overflow-x: auto;
+  margin: 10px 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.fd-doc table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.fd-doc th,
+.fd-doc td {
+  text-align: left;
+  padding: 8px 11px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.fd-doc th {
+  font-weight: 600;
+  color: var(--txt-dim);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--bg-sunk);
+  white-space: nowrap;
+}
+.fd-doc tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ── El historial de versiones ───────────────────────────────────────────── */
+
+.fd-versiones {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 11px;
+  color: var(--txt-faint);
+}
+.fd-version {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--txt-dim);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.fd-version.on {
+  color: var(--accent);
+  border-color: rgb(var(--c-acento) / 0.32);
+  background: var(--accent-dim);
+}
+
+/* ── El ajuste (regenerar con una nota) ──────────────────────────────────── */
+
+.fd-ajuste {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.fd-ajuste textarea {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  padding: 9px 11px;
+  min-height: 62px;
+  outline: 0;
+  resize: vertical;
+}
+.fd-ajuste textarea:focus {
+  border-color: rgb(var(--c-acento) / 0.4);
+}
+
+/* ── Los cinco pasos del Research ────────────────────────────────────────── */
+
+.fd-pasos {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.fd-paso {
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+.fd-paso-cab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  cursor: pointer;
+}
+.fd-paso-cab:hover {
+  background: rgb(var(--c-nube) / 0.02);
+}
+.fd-paso-n {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  border: 1px solid var(--line-strong);
+  color: var(--txt-faint);
+  flex: none;
+}
+.fd-paso.hecho .fd-paso-n {
+  color: var(--bg);
+  background: var(--ok);
+  border-color: var(--ok);
+}
+.fd-paso.corriendo .fd-paso-n {
+  color: var(--accent);
+  border-color: rgb(var(--c-acento) / 0.45);
+}
+.fd-paso-t {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--txt);
+}
+.fd-paso-e {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--txt-faint);
+}
+.fd-paso.hecho .fd-paso-e {
+  color: var(--ok);
+}
+.fd-paso-cuerpo {
+  padding: 0 13px 13px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.fd-citas {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+.fd-citas .fd-etq {
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--txt-faint);
+}
+.fd-citas a {
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fd-citas a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ── Cargando ────────────────────────────────────────────────────────────── */
+
+.fd-cargando {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  color: var(--txt-dim);
+}
+.fd-punto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: fd-latir 1.15s ease-in-out infinite;
+}
+@keyframes fd-latir {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+/* El esqueleto del documento mientras se genera: dice "va a aparecer texto acá", que es
+   más honesto que un spinner sobre una pantalla vacía cuando la espera son minutos. */
+.fd-esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.fd-esqueleto span {
+  height: 9px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--bg-raise), var(--bg-float), var(--bg-raise));
+  background-size: 300% 100%;
+  animation: fd-brillo 1.5s linear infinite;
+}
+@keyframes fd-brillo {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Prospección en Frío — el panel propio y su extractor de leads
+   ═══════════════════════════════════════════════════════════════════════════
+   Puerto de los estilos de `ProspeccionPanel` / `ProspeccionScraper` de ARIA-brain, con los
+   TOKENS de este proyecto: ni un color literal. Es lo mismo que se hizo con el resto de
+   Fundaciones — la forma se conserva, la paleta es la del Command Center. */
+
+.pr-cols {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+/* Sin esto, una tabla de leads ancha estira su columna y aplasta la de outreach hasta hacerla
+   ilegible: los hijos de una rejilla tienen `min-width: auto` por omisión. */
+.pr-cols > * { min-width: 0; }
+
+@media (max-width: 1100px) {
+  .pr-cols { grid-template-columns: 1fr; }
+}
+
+.pr-tarjeta {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pr-tarjeta-titulo {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--txt);
+}
+.pr-nota {
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Las pestañas de fuente ── */
+.sc-pestanias {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sc-pestania {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--txt-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+.sc-pestania:hover { color: var(--txt); }
+.sc-pestania.on {
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border-color: var(--line-strong);
+}
+.sc-emoji { margin-right: 2px; }
+
+.sc-form { display: flex; flex-direction: column; gap: 12px; }
+.sc-rejilla { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.sc-rejilla.dos { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px) {
+  .sc-rejilla.dos { grid-template-columns: 1fr; }
+}
+
+/* La marca de que un campo vino del contexto heredado. Se ve, y no se puede confundir con lo
+   que escribió el alumno: si no se distinguiera, nadie sabría qué revisar antes de gastar. */
+.sc-heredado {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-left: 6px;
+}
+
+.sc-pista,
+.sc-subpista {
+  font-size: 11px;
+  line-height: 1.45;
+  margin: 5px 0 0;
+  color: var(--txt-faint);
+}
+/* La pista de la localización avisa de algo que CUESTA PLATA equivocarse, así que no se pinta
+   con el color de una nota al pie. */
+.sc-pista { color: var(--warn); }
+
+.sc-btn {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--sobre-acento);
+  background: var(--accent);
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.sc-btn:hover { filter: brightness(1.07); }
+.sc-btn:disabled { opacity: 0.5; cursor: default; filter: none; }
+.sc-btn.sec {
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+}
+
+/* ── El aviso de estado del trabajo ── */
+.sc-aviso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-sunk);
+  color: var(--txt-dim);
+}
+.sc-aviso.ok { color: var(--ok); border-color: rgb(var(--c-ok) / 0.28); }
+/* `--crit` y no `--danger`: ese token nunca existió, así que el aviso de error salía con el
+   color heredado —casi blanco— y su borde rojo al lado. Es el mismo defecto que el archivo de
+   al lado ya documenta para `--bg-card`. */
+.sc-aviso.err { color: var(--crit); border-color: rgb(var(--c-crit) / 0.28); }
+
+.sc-giro {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--accent);
+  animation: sc-girar 0.8s linear infinite;
+}
+@keyframes sc-girar { to { transform: rotate(360deg); } }
+/* Quien pidió menos movimiento no necesita un disco girando durante los minutos que tarda un
+   scraping. Se queda quieto y el texto sigue diciendo lo mismo. */
+@media (prefers-reduced-motion: reduce) {
+  .sc-giro { animation: none; }
+}
+
+/* ── Facebook: los dos pasos encadenados ── */
+.sc-pasos { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.sc-paso {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-sunk);
+}
+.sc-paso-titulo { font-size: 12px; font-weight: 700; color: var(--txt-dim); }
+.sc-puente {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--txt-faint);
+  border-left: 2px solid var(--line-strong);
+  padding-left: 9px;
+}
+.sc-puente.listo { color: var(--ok); border-left-color: var(--ok); }
+
+/* ── La tabla de leads ── */
+.pr-resultados { margin-top: 14px; }
+/* `--bg-panel` y no `--bg-card`: ese token NUNCA EXISTIÓ. Y una propiedad personalizada que no
+   existe no falla en ninguna parte — `background: var(--bg-card)` cae a transparente, así que
+   estos tres bloques venían SIN superficie desde el primer día y se veían como un borde suelto
+   sobre el lienzo. Es el modo de falla más silencioso que tiene el CSS: no hay error en la
+   consola, no hay prueba que lo note, y en pantalla parece una decisión de diseño. */
+.leads-bloque {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+.leads-cabeza {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--txt);
+}
+
+/* ── La barra de filtros de «Mis Leads» ─────────────────────────────────────
+   Reemplaza a un `<select>` de fuentes. Un desplegable esconde las opciones hasta que lo
+   abrís: no se ve que hay filtros ni cuáles son. Con cinco fijas, los botones lo dicen de un
+   vistazo — y es la forma que ya tenía el hub. */
+.leads-barra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.leads-filtros {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgb(var(--c-nube) / 0.06);
+  border: 1px solid var(--line);
+}
+.leads-filtros button {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--txt-dim);
+  background: none;
+  /* Transparente y no `0`: el botón puesto lleva borde, y sin esta reserva de un píxel los
+     apagados serían dos píxeles más bajos y la fila saltaría al cambiar de filtro. */
+  border: 1px solid transparent;
+  padding: 5px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.leads-filtros button:hover {
+  color: var(--txt);
+}
+/* La puesta se levanta igual que una pestaña activa: es el mismo gesto y no merece otra
+   gramática visual.
+
+   SIN `box-shadow`, y no es un olvido: este diseño apaga las sombras con un barrido universal,
+   y una sombra escrita en esta capa se le escaparía —misma capa, gana la especificidad—. Copiar
+   la de `.cl-sub button.on` habría traído a la pantalla lo único que el barrido existe para
+   quitar. Los tokens `--sh-*` valen `none` igual, así que tampoco se perdió nada: el estado
+   puesto se lee por el fondo, el color y el peso. */
+.leads-filtros button.on {
+  color: var(--txt);
+  font-weight: 600;
+  background: linear-gradient(180deg, var(--bg-float), var(--bg-raise));
+  border: 1px solid var(--line);
+}
+
+/* Crece para ocupar lo que sobra, con un piso para que no se aplaste contra los filtros
+   cuando la fila envuelve en pantallas angostas. */
+.leads-buscar {
+  flex: 1 1 220px;
+  min-width: 180px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  padding: 7px 11px;
+  outline: 0;
+}
+.leads-buscar::placeholder {
+  color: var(--txt-faint);
+}
+.leads-buscar:focus {
+  border-color: rgb(var(--c-acento) / 0.5);
+}
+/* A la derecha del todo, separado del buscador. */
+.leads-csv {
+  margin-left: auto;
+}
+
+/* ── El color de la tabla de leads ──────────────────────────────────────────
+   Estaba todo del mismo gris: fuente, nombre, teléfono, correo y web pesaban igual, y para
+   saber de dónde salía un lead había que LEER la fila. La jerarquía de abajo es por lo que
+   sirve cada columna, no por decorar:
+
+     · la FUENTE es una pastilla de color — se lee de un vistazo, sin leer;
+     · el NOMBRE manda, es lo que identifica al negocio;
+     · el CORREO va en verde porque es la columna accionable: es con lo que se hace outreach;
+     · el TELÉFONO va monoespaciado y con cifras de ancho fijo, así las columnas de dígitos
+       se alinean y se comparan de un vistazo;
+     · ubicación, categoría y fecha se apagan: son contexto, no acción.
+
+   Todo con tokens de la paleta. El tema claro los redefine, así que esto se adapta solo. */
+
+/* La pastilla toma su color de `--c-f`, que fija cada modificador. Un solo bloque de reglas
+   para las cuatro fuentes en vez de cuatro copias. */
+.lead-fuente {
+  --c-f: var(--c-nube);
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  color: rgb(var(--c-f));
+  background: rgb(var(--c-f) / 0.12);
+  border: 1px solid rgb(var(--c-f) / 0.26);
+}
+.lead-fuente.maps { --c-f: var(--c-ok); }
+.lead-fuente.linkedin { --c-f: var(--c-nube); }
+.lead-fuente.facebook { --c-f: var(--c-dev); }
+.lead-fuente.espia { --c-f: var(--c-violeta); }
+
+.leads-tabla .lead-nombre {
+  color: var(--txt);
+  font-weight: 600;
+}
+/* Verde, igual que en la tabla del scraper: el correo es lo que convierte un lead en un
+   contacto, y merece el mismo color en las dos pantallas. */
+.leads-tabla .lead-email {
+  color: var(--ok);
+}
+.leads-tabla .lead-tel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--txt);
+}
+.leads-tabla .lead-enlace a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.leads-tabla .lead-enlace a:hover {
+  text-decoration: underline;
+}
+.leads-tabla .lead-fecha {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--txt-faint);
+  white-space: nowrap;
+}
+.leads-tabla .lead-vacio {
+  color: var(--txt-faint);
+}
+/* Las columnas de contexto, apagadas. Se nombran por posición porque no llevan clase propia:
+   son las que quedan. */
+.leads-tabla tbody td {
+  color: var(--txt-dim);
+}
+/* La fila bajo el cursor. Es lo que permite seguir una fila larga con la vista sin perder el
+   renglón — y esta tabla tiene ocho columnas y scroll horizontal. */
+.leads-tabla tbody tr:hover td {
+  background: rgb(var(--c-nube) / 0.04);
+}
+
+.leads-vacio {
+  padding: 22px 14px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--txt-dim);
+  text-align: center;
+}
+/* ── La selección y la barra de subida al CRM ───────────────────────────────
+   La barra aparece sólo con algo marcado. Una permanente con el botón apagado ocuparía sitio
+   todo el tiempo para una acción que se usa al final — y encima habría que explicar con texto
+   que primero hay que seleccionar, que es lo que hacía la versión del hub. */
+.leads-tabla .lead-casilla {
+  width: 1%;
+  padding-right: 0;
+}
+.leads-tabla .lead-casilla input {
+  cursor: pointer;
+  accent-color: var(--accent);
+  vertical-align: middle;
+}
+/* La fila marcada se tiñe con el acento. Es lo que permite ver de un vistazo cuántas y cuáles
+   van a subir, sin contar casillas. Pisa al `:hover`, que es más tenue, porque el estado
+   marcado dura y el cursor pasa. */
+.leads-tabla tbody tr.marcada td {
+  background: rgb(var(--c-acento) / 0.07);
+}
+.leads-tabla tbody tr.marcada:hover td {
+  background: rgb(var(--c-acento) / 0.1);
+}
+
+/* ── Dos columnas: la tabla y el panel de envío ─────────────────────────────
+   El panel a la DERECHA y no debajo, como lo tenía el hub. No es estética: la selección se hace
+   en la tabla y el envío se dispara en el panel, así que los dos tienen que estar visibles a la
+   vez. Con el panel debajo de cien filas, marcar y enviar quedan a dos pantallas. */
+.leads-con-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 264px;
+  gap: 14px;
+  align-items: start;
+}
+/* Debajo de 1180px se apilan. El mismo umbral que `.fd-rejilla.dos`, para que las dos pantallas
+   de la aplicación quiebren en el mismo punto y no una antes que la otra. */
+@media (max-width: 1180px) {
+  .leads-con-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leads-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-panel);
+  /* Se queda a la vista al recorrer la tabla: en una página de cien filas, el botón tiene que
+     seguir ahí cuando se marca la número noventa. */
+  position: sticky;
+  top: 8px;
+}
+
+.lp-cuenta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 13px;
+  border-radius: 11px;
+  /* Teñido con el acento, igual que las filas marcadas: el contador y lo que está marcado son
+     la misma cosa, y compartir color lo dice sin una flecha. */
+  background: rgb(var(--c-acento) / 0.07);
+  border: 1px solid rgb(var(--c-acento) / 0.2);
+}
+.lp-cuenta span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--txt);
+}
+.lp-cuenta b {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lp-pista {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--txt-dim);
+}
+
+.lp-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--txt-dim);
+}
+.lp-campo input {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  padding: 9px 11px;
+  outline: 0;
+}
+.lp-campo input::placeholder {
+  color: var(--txt-faint);
+}
+.lp-campo input:focus {
+  border-color: rgb(var(--c-acento) / 0.5);
+}
+.lp-campo em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--txt-faint);
+}
+
+.lp-enviar {
+  justify-content: center;
+  width: 100%;
+  padding: 11px 14px;
+}
+
+.lp-nota {
+  margin: 0;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--txt-faint);
+}
+
+.leads-paginado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--txt-dim);
+}
+/* El botón secundario del sistema: mismo lenguaje que `.fd-btn` pero sin el relleno de acento,
+   que está reservado para la acción principal de cada vista. */
+.fd-btn-menor {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.fd-btn-menor:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.fd-btn-menor:disabled { opacity: 0.45; cursor: not-allowed; }
+/* La tabla scrollea DENTRO de su caja. Sin esto, veinte columnas de LinkedIn hacen que scrollee
+   la página entera y el menú lateral se va de pantalla. */
+.leads-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+.leads-tabla { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+.leads-tabla th,
+.leads-tabla td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.leads-tabla th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-sunk);
+  color: var(--txt-dim);
+  font-weight: 600;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  z-index: 1;
+}
+.leads-tabla tr:last-child td { border-bottom: 0; }
+.lead-num { color: var(--txt-faint); width: 1%; }
+.lead-vacio { color: var(--txt-faint); }
+.lead-enlace { color: var(--accent); text-decoration: none; }
+.lead-enlace:hover { text-decoration: underline; }
+.lead-email { color: var(--ok); }
+
+/* ── La zona del plan ── */
+.pr-zona-plan {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-panel);
+}
+.pr-flujo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.pr-paso {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--txt-faint);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.pr-paso.hecho { color: var(--ok); border-color: rgb(var(--c-ok) / 0.3); }
+.pr-paso.sigue { color: var(--accent); border-color: rgb(var(--c-acento) / 0.3); }
+.pr-flecha { color: var(--txt-faint); font-size: 12px; }
+.pr-btn-plan { width: 100%; justify-content: center; }
+.pr-nota-plan {
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Los dos caminos del Research: el formulario y el agente ──────────────── */
+
+/* El selector no imita a `.fd-sub` (las subpestañas de la pantalla) a propósito: aquéllas navegan
+   entre herramientas y ésta elige CÓMO llenar una. Dos controles que se ven igual y hacen cosas de
+   distinto alcance es lo que hace que alguien crea que perdió su trabajo al cambiar de modo. */
+.fd-modos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.fd-modos button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--txt-dim);
+  background: var(--bg-raise);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  padding: 9px 14px;
+  cursor: pointer;
+}
+.fd-modos button b {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--txt-faint);
+}
+.fd-modos button:hover:not(:disabled) {
+  color: var(--txt);
+  border-color: rgb(var(--c-nube) / 0.28);
+}
+.fd-modos button.on {
+  color: var(--accent);
+  border-color: rgb(var(--c-acento) / 0.4);
+  background: var(--accent-dim);
+}
+.fd-modos button.on b {
+  color: var(--accent);
+}
+.fd-modos button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.fd-modos-nota {
+  font-size: 11px;
+  color: var(--txt-faint);
+}
+
+.fd-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Alto fijo y scroll propio: sin esto la conversación empuja la lista de los cinco pasos fuera de
+   la pantalla, y el estado del research —que es lo que se vino a mirar— deja de verse justo
+   cuando más turnos hay. */
+.fd-chat-hilo {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 380px;
+  min-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.fd-burbuja {
+  max-width: 78%;
+  padding: 10px 13px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  /* Los turnos llegan con saltos de línea —el resumen final es una lista— y sin esto se ven como
+     un párrafo corrido. `pre-wrap` los conserva sin volver monoespaciado el texto. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.fd-burbuja.agente {
+  align-self: flex-start;
+  color: var(--txt);
+  background: var(--bg-raise);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
+}
+.fd-burbuja.mia {
+  align-self: flex-end;
+  color: var(--txt);
+  background: var(--accent-dim);
+  border: 1px solid rgb(var(--c-acento) / 0.3);
+  border-bottom-right-radius: 4px;
+}
+.fd-burbuja.esperando {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--txt-faint);
+}
+
+/* Lo que el agente lleva anotado. Es la mitad del valor de la pantalla: sin esto, la única forma de
+   saber qué entendió es leer la conversación entera hacia atrás. */
+.fd-anotado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fd-anotado-uno {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fd-anotado-uno i {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.fd-chat-pie {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+/* El cuadro de escribir es un `.fd-campo textarea` — el mismo del formulario. Lo único que agrega
+   el chat es el estado deshabilitado, que allá no existe porque un formulario no se bloquea a sí
+   mismo mientras espera una respuesta. */
+.fd-chat .fd-campo textarea:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ── Espía de Anuncios ───────────────────────────────────────────────────── */
+
+/* La barra de búsqueda: dos desplegables, el cuadro y el botón. En una fila mientras entre, y
+   apilada cuando no — el cuadro de búsqueda es lo que crece. */
+.es-barra {
+  display: flex;
+  gap: 9px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.es-select,
+.es-consulta {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--txt);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  padding: 9px 11px;
+  outline: 0;
+  min-width: 0;
+}
+.es-consulta {
+  flex: 1 1 260px;
+}
+.es-consulta::placeholder {
+  color: var(--txt-faint);
+}
+.es-consulta:focus,
+.es-select:focus {
+  border-color: rgb(var(--c-acento) / 0.4);
+}
+/* Sin `appearance: none` el navegador pinta su propio control, que en macOS ignora el fondo y el
+   borde: un cuadro blanco en medio de la pantalla oscura. Es la misma nota de `.fd-campo select`,
+   con la misma flecha por imagen de fondo — un `::after` sobre un `select` no se pinta. */
+.es-select {
+  appearance: none;
+  padding-right: 30px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23ffffff' stroke-opacity='.55' stroke-width='1.5'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 11px;
+}
+/* Las opciones las pinta el sistema operativo, no esta hoja: sin esto, en Windows el menú abierto
+   sale con texto claro sobre fondo claro. */
+.es-select option {
+  background: var(--bg-sunk);
+  color: var(--txt);
+}
+.es-select option:disabled {
+  color: var(--txt-faint);
+}
+
+/* El historial del Espía (2026-10-03): las búsquedas anteriores, para volver a abrirlas sin pagar
+   Apify otra vez. Una fila por búsqueda; la que se está mirando, marcada y sin acción. */
+.es-historial .card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.es-historial-lista {
+  display: flex;
+  flex-direction: column;
+}
+.es-busqueda {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--txt-dim);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.es-busqueda:hover:not(:disabled) {
+  background: var(--bg-sunk);
+  color: var(--txt);
+}
+.es-busqueda:disabled {
+  cursor: default;
+}
+.es-busqueda b {
+  color: var(--txt);
+  font-weight: 600;
+}
+.es-busqueda.actual .es-busqueda-punto {
+  color: var(--accent);
+}
+.es-busqueda-punto {
+  color: var(--txt-faint);
+}
+.es-busqueda-dato {
+  font-size: 11.5px;
+  color: var(--txt-faint);
+}
+
+/* El filtro del paso 1 reusa el aspecto de `.es-consulta`, pero NO su `flex: 1 1 260px`: ese valor es
+   para la barra del Espía, que es una fila; acá el filtro vive en una columna y el mismo valor lo
+   estiraba a 260 px de alto. */
+.sc-filtro {
+  flex: 0 0 auto;
+  max-width: 360px;
+}
+
+/* El paso 1 del Scraper de Facebook: la misma lista que el historial del Espía, con tope de alto. */
+.sc-busquedas {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.sc-busquedas .es-busqueda:first-child {
+  border-top: none;
+}
+.sc-enlace {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.es-herramientas {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.es-cuenta {
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  margin-right: auto;
+}
+
+.es-analisis-cuerpo {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--txt);
+  /* El modelo devuelve markdown y acá se muestra tal cual: lo que hace falta conservar son los
+     saltos de línea, o las cuatro secciones se leen como un párrafo corrido. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Las tarjetas de anuncios. `auto-fill` y no un número de columnas: la pantalla vive dentro de la
+   vista de Tools, que cambia de ancho con el menú lateral. */
+.es-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 12px;
+}
+.es-tarjeta {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+.es-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 168px;
+  background: var(--bg-sunk);
+  color: var(--txt-faint);
+  overflow: hidden;
+}
+.es-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.es-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 11px 13px 13px;
+}
+.es-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.es-pastilla {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--txt-faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+/* Verde para el que sigue corriendo: es la señal por la que existe esta pantalla. */
+.es-pastilla.vivo {
+  color: var(--ok);
+  border-color: rgb(var(--c-ok) / 0.3);
+}
+.es-pagina {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--txt);
+}
+/* El copy se recorta a seis líneas: sin esto, un anuncio largo estira su tarjeta y rompe la
+   cuadrícula. Quien quiera leerlo entero tiene el enlace a la Ad Library abajo. */
+.es-copy {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--txt-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.es-enlace {
+  font-size: 11.5px;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: auto;
+}
+.es-enlace:hover {
+  text-decoration: underline;
+}
+
+/* El pie explicativo, con el diseño de Jorge. */
+.es-rasgos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.es-rasgo {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  padding: 14px 16px;
+}
+.es-rasgo h4 {
+  margin: 0 0 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--txt);
+}
+.es-rasgo p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--txt-dim);
+}
+
+/* ── Facebook: los anunciantes que se descubrieron ───────────────────────── */
+
+/* La lista de anunciantes: es donde se decide a quién se le gasta el paso 2. */
+.sc-cuenta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--txt-dim);
+}
+.sc-todos {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--txt);
+  cursor: pointer;
+}
+.sc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--line);
+}
+.sc-fila {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  background: var(--bg-panel);
+  font-size: 12px;
+  cursor: pointer;
+}
+.sc-fila:hover {
+  background: var(--bg-raise);
+}
+.sc-fila input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.sc-fila-nombre {
+  color: var(--txt);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sc-fila-dato {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--txt-faint);
+  white-space: nowrap;
+}
+/* El que no se puede procesar se ve apagado y sigue estando: esconderlo haría que la cuenta de
+   arriba no cuadre y que nadie sepa dónde se fue. */
+.sc-fila.sin-pagina {
+  cursor: default;
+}
+.sc-fila.sin-pagina .sc-fila-nombre {
+  color: var(--txt-faint);
+  text-decoration: line-through;
+}
+.sc-fila.sin-pagina:hover {
+  background: var(--bg-panel);
+}
+
+/* Las tarjetas de anuncio dentro de Prospección: más chicas que en el Espía de Tools, porque acá
+   comparten la columna con el formulario y con la tabla de leads. */
+.sc-anuncios {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+.sc-anuncios .es-media {
+  height: 130px;
+}
+
+/* ── La barra del método: paso anterior, progreso, continuar ──────────────── */
+
+.fd-barra-pasos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+/* El indicador se lleva el espacio del medio y empuja los dos botones a los extremos, que es donde
+   la mano los busca: atrás a la izquierda, adelante a la derecha. */
+.fd-segmentos {
+  display: flex;
+  gap: 5px;
+  flex: 1 1 120px;
+  justify-content: center;
+}
+.fd-segmento {
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+/* Verde el que está hecho —la misma señal que la pestaña completa— y acento el actual: son dos
+   cosas distintas y con un solo color el paso en el que estás se pierde entre los terminados. */
+.fd-segmento.hecho {
+  background: var(--ok);
+}
+.fd-segmento.aqui {
+  background: var(--accent);
+  width: 30px;
+}
+.fd-paso-nota {
+  font-size: 11.5px;
+  color: var(--txt-faint);
+  text-align: right;
+}
+.fd-paso-nota b {
+  color: var(--txt-dim);
+  font-weight: 600;
+}
+
+/* ── «Construyendo tu …»: la señal de que hay una generación en curso ────── */
+
+/* Arriba del chat y del documento, en acento y con el punto latiendo: es lo único de la pantalla que
+   se está moviendo, y tiene que leerse desde lejos. Un aviso gris debajo de todo no lo lograba. */
+.fd-construyendo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border: 1px solid rgb(var(--c-acento) / 0.45);
+  border-radius: 12px;
+  background: var(--accent-dim);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--txt);
+}
+.fd-construyendo b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ── Construir el método en cadena ───────────────────────────────────────── */
+
+.fd-construir {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgb(var(--c-acento) / 0.35);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+.fd-construir-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 320px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--txt-dim);
+}
+.fd-construir-texto b {
+  font-size: 13px;
+  color: var(--txt);
+  font-weight: 600;
+}
+
+/* La banda de la cadena: arriba de la barra de subpestañas, visible desde cualquier herramienta. */
+.fd-cadena {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgb(var(--c-acento) / 0.45);
+  border-radius: 12px;
+  background: var(--accent-dim);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--txt);
+}
+.fd-cadena b { color: var(--accent); font-weight: 700; }
+.fd-cadena.detenida {
+  border-color: rgb(var(--c-warn) / 0.45);
+  background: var(--bg-panel);
+}
+.fd-cadena.detenida b { color: var(--warn); }
+.fd-cadena-texto { flex: 1 1 260px; min-width: 0; }
+.fd-cadena-eslabones { display: flex; gap: 6px; flex-wrap: wrap; }
+.fd-eslabon {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--txt-faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.fd-eslabon.hecho { color: var(--ok); border-color: rgb(var(--c-ok) / 0.35); }
+.fd-eslabon.aqui { color: var(--accent); border-color: rgb(var(--c-acento) / 0.5); }
+
+/* ── El formulario de onboarding en «Tu ficha» ──────────────────────────────
+   Una línea entre la cabecera y el chat: en qué estado está el formulario de Walter y el botón
+   que lo vuelve a traer. Mismos tokens que `.fd-aviso` y `.fd-fuente`. Aprobado sobre mockup
+   (2026-09-10). */
+.fd-onboarding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-sunk);
+  font-size: 12px;
+  color: var(--txt-dim);
+}
+.fd-onboarding .fd-marca { font-size: 14px; line-height: 1; display: inline-flex; }
+.fd-onboarding .fd-onboarding-texto { flex: 1 1 320px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fd-onboarding .fd-onboarding-texto b { color: var(--txt); font-weight: 600; }
+.fd-onboarding .fd-onboarding-texto small { color: var(--txt-faint); font-size: 11.5px; line-height: 1.45; }
+.fd-onboarding .fd-btn { white-space: nowrap; }
+.fd-onboarding.ok { border-color: rgb(var(--c-acento) / 0.3); background: var(--accent-dim); }
+.fd-onboarding.ok .fd-marca { color: var(--accent); }
+.fd-onboarding.falta { border-style: dashed; border-color: rgb(var(--c-warn) / 0.4); }
+.fd-onboarding.falta .fd-marca { color: var(--warn); }
+.fd-onboarding.mal { border-color: rgb(var(--c-crit) / 0.35); }
+.fd-onboarding.mal .fd-marca { color: var(--crit); }
+
+/* ── La mirada al mercado real del Research ─────────────────────────────────
+   Entre el paso 1 y el 2, con borde punteado y sangría: no es un paso del método. Aprobado sobre
+   mockup (2026-09-10). Mismos tokens que `.fd-aviso`, `.fd-paso` y `.fd-eslabon`. */
+.fd-paso-y-mirada { display: grid; gap: 8px; }
+.fd-mirada {
+  margin-left: 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg-sunk);
+  display: grid;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--txt-dim);
+}
+.fd-mirada p { margin: 0; font-size: 12px; line-height: 1.5; }
+.fd-mirada p b { color: var(--txt); font-weight: 600; }
+.fd-mirada-titulo { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--txt-faint); }
+.fd-mirada-link { text-transform: none; letter-spacing: 0; color: var(--accent); font-size: 11.5px; }
+.fd-mirada-fuente { display: flex; align-items: center; gap: 10px; }
+.fd-mirada-pt { width: 8px; height: 8px; border-radius: 50%; background: var(--txt-faint); flex: 0 0 auto; }
+.fd-mirada-fuente.ok .fd-mirada-pt { background: var(--ok); }
+.fd-mirada-fuente.corriendo .fd-mirada-pt { background: var(--accent); outline: 4px solid var(--accent-dim); }
+.fd-mirada-fuente.mal .fd-mirada-pt { background: var(--crit); }
+.fd-mirada-fuente.espera .fd-mirada-pt { background: transparent; border: 1px dashed var(--txt-faint); }
+.fd-mirada-e { margin-left: auto; font-size: 11px; color: var(--txt-faint); text-align: right; }
+.fd-mirada-fuente.ok .fd-mirada-e { color: var(--ok); }
+.fd-mirada-fuente.corriendo .fd-mirada-e { color: var(--accent); }
+.fd-mirada-fuente.mal .fd-mirada-e { color: var(--crit); }
+.fd-mirada-nota { font-size: 11px; color: var(--txt-faint); }
+.fd-mirada.gasto { border-color: rgb(var(--c-warn) / 0.45); }
+.fd-mirada-t { display: flex; gap: 10px; align-items: flex-start; }
+.fd-mirada-t i { font-style: normal; color: var(--warn); font-size: 14px; line-height: 1.2; }
+.fd-mirada-t b { color: var(--txt); font-weight: 600; }
+.fd-mirada-t small { display: block; margin-top: 3px; font-size: 11.5px; color: var(--txt-faint); line-height: 1.5; }
+.fd-mirada-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.fd-mirada.lista { border-style: solid; border-color: rgb(var(--c-acento) / 0.3); background: var(--accent-dim); }
+.fd-cifras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.fd-cifra { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 1px; }
+.fd-cifra b { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: var(--txt); font-variant-numeric: tabular-nums; }
+.fd-cifra span { font-size: 11px; color: var(--txt-dim); }
+.fd-mirada.omitida { grid-template-columns: auto 1fr; align-items: start; border-style: solid; }
+.fd-mirada.omitida i { font-style: normal; color: var(--warn); }
+@media (max-width: 640px) { .fd-cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ── La franja de saldo de Tools (SaldoDeLeads.jsx) ─────────────────────────── */
+.sl-franja { border: 1px solid var(--line); border-radius: 10px; background: var(--bg-sunk); padding: 10px 14px; display: grid; gap: 8px; }
+.sl-linea { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.sl-n { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--txt); }
+.sl-n small { font-size: 12px; font-weight: 500; color: var(--txt-dim); margin-left: 6px; }
+.sl-n .sl-equivale { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0; color: var(--txt-faint); margin-left: 10px; }
+.sl-barra { flex: 1 1 220px; height: 6px; border-radius: 3px; background: var(--line); position: relative; overflow: hidden; }
+.sl-barra i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 3px; }
+.sl-barra i.bajo { background: var(--warn); }
+.sl-barra i.cero { background: var(--crit); }
+.sl-desglose { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--txt-dim); font-variant-numeric: tabular-nums; }
+.sl-desglose b { color: var(--txt); font-weight: 600; }
+.sl-desglose span::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; background: var(--txt-faint); }
+.sl-desglose .g::before { background: var(--accent); }
+.sl-desglose .u::before { background: var(--line-strong); }
+.sl-desglose .p::before { background: var(--ok); }
+.sl-como { margin-left: auto; background: none; border: 0; padding: 0; font: inherit; font-size: 12.5px; color: var(--accent); cursor: pointer; white-space: nowrap; }
+.sl-como:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.sl-aviso { font-size: 12.5px; }
+.sl-franja.alerta { border-color: rgb(var(--c-warn) / 0.45); }
+.sl-franja.alerta .sl-aviso { color: var(--warn); }
+.sl-franja.agotado { border-color: rgb(var(--c-crit) / 0.45); }
+.sl-franja.agotado .sl-aviso { color: var(--crit); }
+.sl-nota, .sl-explica { margin: 0; font-size: 12px; color: var(--txt-dim); line-height: 1.5; }
+@media (max-width: 640px) { .sl-como { margin-left: 0; } }

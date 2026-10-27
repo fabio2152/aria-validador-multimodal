@@ -1,0 +1,1482 @@
+/* La estética de las pantallas de operación: la FORMA. Los colores son los del tema, los mismos que
+ * el resto de la aplicación; `temas.css` sólo guarda, con este alcance, los pocos que el tema no tiene.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════
+ * QUÉ ES ESTO Y POR QUÉ ES UNA HOJA APARTE
+ *
+ * Se traslada el sistema visual de `docs/migracion/front/01…14` del proyecto hermano. Todo lo de
+ * acá cuelga de `:is(#v-closer, .estetica-op)`, así que:
+ *
+ *   · una pantalla entra a la estética agregando `estetica-op` a su `<section class="view">`, y
+ *     sale quitándola. Las que no la llevan —hoy `executive` y `contacts`— no se mueven;
+ *   · gana por especificidad (un `#id` delante) y no por `!important` ni por orden, así que no
+ *     depende de en qué lugar de `globals.css` se importe;
+ *   · `aios.css` y `closer.css` no se tocan. La primera tiene que seguir siendo comparable contra
+ *     el prototipo; la segunda tiene reglas que las pruebas leen por su forma exacta (`106`).
+ *
+ * ── EL ALCANCE CRECIÓ EN PASOS, Y CADA UNO FUE DISTINTO ────────────────────
+ *
+ * El archivo se llamaba `closer-estetica.css` y colgaba solo de `#v-closer`. Acá decía por qué:
+ * *«se empieza por el Closer para verlo en local antes de extenderlo… es la forma de poder comparar
+ * las dos estéticas en la misma pantalla y decidir hasta dónde extenderla»*. El nombre cambió con
+ * el alcance — una hoja llamada «closer» que pinta otras vistas es de las cosas que hacen perder
+ * media hora buscando por qué algo se ve distinto.
+ *
+ *   · **El Setter** fue casi solo el cambio de selector: su chrome es el MISMO DOM clase por clase
+ *     y los componentes de adentro son literalmente los mismos archivos. Un solo choque real.
+ *   · **Auditoría de agentes** fue otra cosa, y conviene saberlo antes de tocarla: **no comparte
+ *     un solo componente**. Reimplementó por su cuenta los siete conceptos —tarjeta, sección,
+ *     fila, avisos, botones, píldoras y plegable— con su propia familia `aud-*`. Así que el
+ *     alcance le trajo la paleta, la tipografía y la barra de pestañas, y su hoja
+ *     (`app/auditoria.css`) tuvo que adaptar las siete a esta forma. Ahí está esa mitad.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════
+ * `#v-closer` NO ES REDUNDANTE: ES EL ANCLA DE ESPECIFICIDAD. NO SE BORRA.
+ *
+ * El alcance fue tres veces una lista de ids —`#v-closer`, después `, #v-setter`, después
+ * `, #v-conversation`—, o sea que cada pantalla nueva costaba editar las 169 líneas de selector de
+ * esta hoja más los dos bloques de `temas.css`. Con nueve pantallas más en camino, cada línea
+ * habría pasado de ~120 a ~200 caracteres.
+ *
+ * Ahora la lista es `:is(#v-closer, .estetica-op)` y la pantalla se anota a sí misma con una
+ * clase. Se puede hacer por una regla del lenguaje que hay que conocer antes de tocar esta línea:
+ *
+ *   **`:is()` toma la especificidad de su argumento MÁS específico, sin importar cuál coincidió.**
+ *
+ * O sea que `:is(#v-closer, .estetica-op)` vale `1-0-0` —la de un `#id`— también cuando quien
+ * coincide es la clase. Es EXACTAMENTE la especificidad que tenía la lista de tres ids, así que
+ * ni una de las 210 reglas cambió de lugar en la cascada. Está medido, no supuesto: se volcaron
+ * los estilos computados de 3024 sondas (todas las clases de esta hoja × siete etiquetas × tres
+ * vistas × dos temas) antes y después del cambio, y salieron idénticos.
+ *
+ * **Si alguien borra `#v-closer` por parecer repetido** —está también en la clase, después de
+ * todo— las 210 reglas caen de `1-x-0` a `0-x+1-0` de golpe. No falla nada: se despintan las que
+ * `closer.css` y `aios.css` pisan, en pantallas distintas y sin error en consola. Por eso hay una
+ * prueba en `146-estetica-de-operacion` que exige que el alcance tenga un `#id` Y una clase.
+ *
+ * Y por eso el Closer también lleva `estetica-op` en su `<section>`, aunque coincidiría igual por
+ * el id: para que ninguna pantalla sea un caso especial, y para que el `#v-closer` de acá se lea
+ * por lo único que hace, que es sostener la especificidad.
+ * ═════════════════════════════════════════════════════════════════════════════
+ *
+ * ── LO QUE NO SE EXTIENDE, Y NO ES UN OLVIDO ──────────────────────────────
+ *
+ * Dos familias siguen colgadas de `#v-closer` solo, porque son de cosas que las otras no tienen:
+ *
+ *   · **la Agenda** (sección 5) — la cuarta sub-pestaña del Setter es Contactos, y Auditoría tiene
+ *     dos pestañas y ninguna es un calendario;
+ *   · **`.ck-closer` y `.ck-vercomo`** — de `QuienEsElCloser` y del selector «ver como», que no
+ *     tienen equivalente en ninguna otra pantalla.
+ *
+ * Ojo con la diferencia, que es la que confunde: `#v-closer .ag-mes` está acotado A PROPÓSITO,
+ * mientras que el `#v-closer` de `:is(#v-closer, .estetica-op)` es el ancla y alcanza a todas.
+ * El mismo id hace dos cosas distintas según dónde aparezca.
+ *
+ * Extenderlas no rompería nada —una regla que no coincide no pinta— pero dejarlas acotadas dice de
+ * quién es cada cosa, que es para lo que sirve leer una hoja de estilos.
+ *
+ * ── Y LO QUE SÍ SE COMPARTE, QUE ES CASI TODO ─────────────────────────────
+ *
+ * No por generosidad: el chrome de las TRES vistas es el MISMO DOM clase por clase —sección,
+ * scroller, cabecera, cápsula de pestañas, `.cl-page`— y entre Closer y Setter, además, `MiDia`,
+ * `Pipeline`, `Fila`, `Ficha`, `SeccionPlegable`, `Comision`, `Avanzar` y `EnlacesRapidos` son
+ * literalmente los mismos archivos. Con el alcance en una sola vista, las otras dibujaban esos
+ * componentes con la forma vieja: el mismo componente con dos aires según en qué pestaña se lo
+ * mirara.
+ *
+ * Auditoría no tenía las tres últimas clases de su chrome —`.stack`, `.ch-title` y `.cl-page`— y se
+ * le agregaron en el JSX en vez de compensarlas con reglas. Es lo que hizo desaparecer dos de sus
+ * tres choques: el encabezado invertido necesita las dos primeras para apilarse, y sin la tercera el
+ * `gap` del scroller se aplicaba entre TODOS los bloques en vez de una vez.
+ *
+ * ── LO QUE SE TRASLADA, Y LO QUE SE DECIDIÓ DISTINTO ────────────────────────
+ *
+ * Se copian las «diez cadenas exactas» del `14` § 2 traducidas a este CSS: tarjeta grande de 2 rem
+ * translúcida, sección opaca, fila `24/16`, rótulo de 11 px en mayúsculas con `0.15em`, cifra
+ * `font-weight: 300`, píldora de 9 px, contador sólido, cápsula de pestañas con la activa en el acento
+ * sólido, acordeón de rejilla. Y las doce reglas del `14` § 1 que esta aplicación YA cumplía siguen
+ * cumplidas —nada de esto toca qué se dibuja, solo cómo—.
+ *
+ * Tres cosas se apartan del documento a propósito, y conviene saberlo antes de buscarlas:
+ *
+ *   1 · **Sin sombras.** El sistema original flota sus tarjetas con `0 8px 30px rgb(0 0 0 / .04)`.
+ *       Este proyecto decidió quitar TODA sombra en los dos temas y `107-sin-sombras` lo vigila.
+ *       Se respeta esa decisión: la separación la dan la escala de elevación y las líneas, que es
+ *       lo que el propio `01` § 2 prescribe para el oscuro. Volver a la sombra es una línea y una
+ *       prueba, si al verlo hace falta.
+ *   2 · **El titular de dinero no brilla.** El `07` § 4 le pone un `drop-shadow` dorado de 24 px.
+ *       Es un efecto de profundidad, y se pidió que no hubiera. Quedaba el degradado recortado al
+ *       texto; desde la marca v2 sus tres puntos son el blanco del dinero, así que es plano.
+ *   3 · **Cierre en curso fue índigo, no ámbar**, mientras estas pantallas tuvieron paleta propia:
+ *       el `03` § 2 le da ámbar a seguimiento y a cierre, y `106` exige colores distintos. Desde la
+ *       marca v2 (`NE-25`) las etapas son las del tema, y cierre es el ámbar apagado de la paleta
+ *       común.
+ *
+ * ── LA FUENTE ─────────────────────────────────────────────────────────────────
+ *
+ * El sistema usa la del sistema operativo y ninguna web (`02` § 1). Acá se declara sobre
+ * `:is(#v-closer, .estetica-op)` y se hereda hacia abajo; `next/font` sigue cargando Inter para el resto de la
+ * aplicación, y sacarlo es decisión de cuando esto se extienda.
+ *
+ * ═════════════════════════════════════════════════════════════════════════════
+ * LA ESCALA: 13/16. POR QUÉ TODO SE VEÍA «CON ZOOM»
+ *
+ * La primera versión de esta hoja copió los tamaños del sistema hermano **en píxeles absolutos**:
+ * pestañas de 36 px de alto con 20 px de relleno, título de 30 px, tarjetas de 32 px, cifra de
+ * 48 px. Llegó el reporte de que las pestañas se veían gigantes y ocupaban media pantalla, y la
+ * causa no era el gusto de nadie: es una razón medible.
+ *
+ *   · el sistema hermano corre sobre la base del navegador, **16 px**. Su `text-xs` (12 px) es el
+ *     0,75 de su base, y su título de 30 px es 1,9 veces la base;
+ *   · esta aplicación declara `body { font-size: 13px }` en `aios.css`. Los mismos 12 px son el
+ *     **0,92** de su base, y los mismos 30 px son **2,3 veces**.
+ *
+ * O sea que cada valor importado se veía `16/13 ≈ 1,23×` más grande **en relación con todo lo que
+ * tiene alrededor** — la barra lateral, la barra superior, el resto de las pantallas. No era una
+ * hoja mal calibrada: era una hoja calibrada para otra base.
+ *
+ * Medido antes de tocar nada: la cápsula de pestañas ocupaba **466 × 49 px** y había **289 px**
+ * desde el borde de la vista hasta la primera tarjeta.
+ *
+ * ── LA CORRECCIÓN, Y CÓMO SEGUIRLA ────────────────────────────────────────
+ *
+ * Se aplicó la razón inversa —**0,8125**— a los 80 valores absolutos de esta hoja, redondeando a
+ * medios píxeles en la tipografía y a enteros en la geometría. Lo que **no** se toca son los
+ * valores que no vienen del sistema: los grosores de línea (1 px), los radios de círculo completo,
+ * y los tamaños que ya eran del tamaño del entorno.
+ *
+ * **Si hace falta más o menos, es esa razón la que se mueve, no un valor suelto.** Cambiar la
+ * cápsula sola la desalinea del título y de las tarjetas, que es cómo una pantalla queda con dos
+ * escalas y se lee como un error de maquetación.
+ * ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ── 0 · La base ──────────────────────────────────────────────────────────── */
+
+:is(#v-closer, .estetica-op) {
+  --radio:         var(--radius-sm);
+  /* Los radios de la marca (`NE-27`): 12 px los campos y 20 px las tarjetas. Eran 10 y 26 —los 32 del
+     sistema que se trasladó, por la escala de esta hoja—, y salen de `public/brand/tokens.css` para
+     que el día que la marca los cambie, cambien acá sin que nadie lo tenga que recordar. Los demás
+     radios de la hoja están escritos a mano y quedan para la fase de detalles. */
+  --radio-tarjeta: var(--radius-lg);
+  /* La letra de la aplicación. Tenía su propia pila del sistema, así que las doce pantallas de
+     operación se veían con otra letra que el resto (`NE-24`). */
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0;
+  color: var(--txt);
+}
+
+/* ── EL LIENZO ES PLANO, Y LA VISTA LO PINTA ────────────────────────────────
+   Esto existía para tapar la cuadrícula de 44 px y el viñeteado del armazón (`body::before` /
+   `body::after` en `aios.css`): la vista pintaba su propio lienzo y se estiraba sobre el relleno de
+   `.main` (14 / 18 / 8 px) para que no asomara una franja del fondo viejo. Desde la marca v2 el
+   fondo es liso en toda la aplicación (`temas.css`, «EL FONDO ES LISO») y esto pinta el mismo
+   `--bg` que el `body`, así que ya no tapa nada. Queda hasta la fase de detalles porque quitarlo
+   cambia la geometría de las doce pantallas: son sus márgenes negativos los que la mueven. */
+:is(#v-closer, .estetica-op).view {
+  margin: -14px -18px -8px;
+  padding: 14px 18px 8px;
+  height: calc(100% + 22px);
+  background: var(--bg);
+}
+
+/* El lienzo del Closer: `p-8 max-w-[1600px] mx-auto space-y-8` (`05` § 3). Y la barra de
+   desplazamiento fina del `01` § 5, que en el sistema se aplica a mano donde hace falta. */
+:is(#v-closer, .estetica-op) .view-scroll {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 12px 24px 40px;
+  gap: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+:is(#v-closer, .estetica-op) .view-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+:is(#v-closer, .estetica-op) .view-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 9999px; }
+:is(#v-closer, .estetica-op) .view-scroll::-webkit-scrollbar-track { background: transparent; }
+
+:is(#v-closer, .estetica-op) .cl-page { gap: 18px; }
+
+/* ── Cómo entra cada pestaña (`06` § 6): aparece y sube 16 px en medio segundo. Es
+   deliberadamente lenta —media el movimiento más grande de la pantalla— y la cabecera NO se
+   anima: solo cambia el contenido. */
+@keyframes cl-entrar {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+:is(#v-closer, .estetica-op) .cl-page > * { animation: cl-entrar .5s ease both; }
+
+/* ── 1 · La cabecera y la cápsula de pestañas (`06`) ───────────────────────── */
+
+/* La cabecera se separa del contenido con UNA LÍNEA al 30 %, no con un fondo. */
+:is(#v-closer, .estetica-op) .cre-head {
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+}
+/* Título a la izquierda, pestañas a la derecha; en pantalla angosta, una debajo de la otra. */
+:is(#v-closer, .estetica-op) .ch-l.stack {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+}
+@media (max-width: 900px) {
+  :is(#v-closer, .estetica-op) .ch-l.stack { flex-direction: column; align-items: flex-start; }
+}
+
+/* El rótulo superior y el título. El HTML trae `<h2>Closer</h2>` y debajo la descripción de la
+   pestaña; el sistema pone el ROL arriba, chico y en el acento, y el NOMBRE de la pantalla abajo, grande.
+   Se invierte el peso visual sin tocar el marcado: el `h2` es el rótulo, la descripción el título. */
+:is(#v-closer, .estetica-op) .ch-title {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+:is(#v-closer, .estetica-op) .cre-head h2 {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: .8;
+  margin: 0;
+}
+:is(#v-closer, .estetica-op) .cre-head .cre-desc {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  color: var(--txt);
+}
+
+/* La cápsula: opaca, redonda, con `p-1.5` de aire alrededor de la activa. Sin la sombra propia
+   que el sistema le da —ver el encabezado—. */
+:is(#v-closer, .estetica-op) .cl-sub {
+  gap: 3px;
+  padding: 4px;
+  border-radius: 9999px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  align-self: center;
+}
+:is(#v-closer, .estetica-op) .cl-sub button {
+  height: 30px;
+  padding: 0 14px;
+  gap: 6px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--txt-dim);
+  transition: background .15s ease, color .15s ease;
+}
+:is(#v-closer, .estetica-op) .cl-sub button svg { width: 14px; height: 14px; opacity: 1; }
+:is(#v-closer, .estetica-op) .cl-sub button:hover { color: var(--txt); background: rgb(var(--c-nube) / .06); }
+/* La activa es el ÚNICO fondo sólido del acento en el armazón. */
+:is(#v-closer, .estetica-op) .cl-sub button.on {
+  background: var(--accent-hondo);
+  color: var(--sobre-acento);
+  font-weight: 500;
+  box-shadow: none;
+}
+:is(#v-closer, .estetica-op) .cl-sub button.on svg { color: inherit; }
+/* El contador cambia de paleta según el estado de la pestaña: sobre el acento sólido, un acento al
+   10 % sería invisible, así que ahí usa el color del TEXTO al 20 %. */
+:is(#v-closer, .estetica-op) .cl-sub .cnt {
+  margin-left: 1px;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  background: rgb(var(--c-acento) / .10);
+  color: var(--accent);
+}
+:is(#v-closer, .estetica-op) .cl-sub button.on .cnt {
+  background: rgb(var(--c-sobre-acento) / .20);
+  color: inherit;
+}
+
+/* ── 2 · La tarjeta grande y la sección opaca (`14` § 2) ───────────────────── */
+
+/* Tarjeta translúcida: `bg-card/50 backdrop-blur-sm border-border/40 rounded-[2rem] p-8`. Sin
+   `backdrop-filter` la tarjeta se ve como un rectángulo semitransparente; van siempre juntos. */
+:is(#v-closer, .estetica-op) .md-c,
+:is(#v-closer, .estetica-op) .card,
+:is(#v-closer, .estetica-op) .aj-tarjeta {
+  background: rgb(var(--c-panel) / .5);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--line);
+  border-radius: var(--radio-tarjeta);
+  box-shadow: none;
+}
+:is(#v-closer, .estetica-op) .md-top { gap: 18px; }
+:is(#v-closer, .estetica-op) .md-c {
+  padding: 22px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+/* El rótulo de tarjeta y la cifra grande: la combinación de firma del sistema (`02` § 3). Una
+   cifra de 48 px liviana junto a un rótulo de 11 px semibold en mayúsculas con `0.15em`. */
+:is(#v-closer, .estetica-op) .md-k {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+}
+:is(#v-closer, .estetica-op) .md-v {
+  font-size: 38px;
+  font-weight: 300;
+  letter-spacing: -.025em;
+  line-height: 1;
+  margin-top: 10px;
+}
+:is(#v-closer, .estetica-op) .md-s {
+  text-align: right;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--txt-dim);
+  max-width: 45%;
+}
+:is(#v-closer, .estetica-op) .md-chip {
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  margin-left: 0;
+  border: 1px solid transparent;
+}
+:is(#v-closer, .estetica-op) .md-chip.o { background: rgb(var(--c-ok) / .10); color: var(--ok); border-color: rgb(var(--c-ok) / .20); }
+:is(#v-closer, .estetica-op) .md-chip.u { background: rgb(var(--c-crit) / .10); color: var(--crit); border-color: rgb(var(--c-crit) / .20); }
+
+/* La sección OPACA (`08` § 4): es el trabajo, y el trabajo no es translúcido. */
+:is(#v-closer, .estetica-op) .md-sec {
+  border-radius: var(--radio-tarjeta);
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  box-shadow: none;
+  overflow: hidden;
+}
+/* El canto de color de 3 px que `closer.css` le pone a cada etapa y cola se apaga acá: en el
+   sistema el color de la sección lo dice su ENCABEZADO teñido, y un canto sobre un radio de 2 rem
+   se ve como un defecto. La regla de `closer.css` queda como está —`106` la lee por su forma—. */
+:is(#v-closer, .estetica-op) .md-sec[data-etapa],
+:is(#v-closer, .estetica-op) .md-sec[data-cola] { border-left: 1px solid var(--line); }
+
+/* El encabezado de sección: `px-6 py-4`, título de 13 px en mayúsculas, y —cuando tiene color—
+   el fondo al 10 %, el título en el tono de la cola y el contador SÓLIDO con el texto casi negro
+   de la marca (`on-ink`). */
+:is(#v-closer, .estetica-op) .md-h {
+  padding: 12px 20px;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+  color: var(--txt);
+}
+:is(#v-closer, .estetica-op) .md-sec[data-etapa] .md-h,
+:is(#v-closer, .estetica-op) .md-sec[data-cola] .md-h {
+  background: rgb(var(--c-etapa) / .10);
+  color: var(--etapa);
+}
+:is(#v-closer, .estetica-op) .md-h .b {
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  background: rgb(var(--c-nube) / .10);
+  color: var(--txt-dim);
+}
+:is(#v-closer, .estetica-op) .md-sec[data-etapa] .md-h .b,
+:is(#v-closer, .estetica-op) .md-sec[data-cola] .md-h .b {
+  background: var(--etapa);
+  color: var(--sobre-lleno);
+}
+:is(#v-closer, .estetica-op) .md-sec[data-etapa] .md-h::before,
+:is(#v-closer, .estetica-op) .md-sec[data-cola] .md-h::before { width: 8px; height: 8px; }
+:is(#v-closer, .estetica-op) .sec-plegar { width: 24px; height: 24px; border-radius: 9999px; }
+
+/* El estado vacío de una sección: solo texto, centrado. Un recuadro punteado dentro de una
+   tarjeta de 2 rem es un marco dentro de un marco. */
+:is(#v-closer, .estetica-op) .dw-empty,
+:is(#v-closer, .estetica-op) .md-sec > .pipe-vacia {
+  margin: 0;
+  padding: 24px 20px;
+  border: 0;
+  background: none;
+  border-radius: 0;
+  font-size: 11.5px;
+  color: var(--txt-dim);
+}
+
+/* ── 3 · La fila (`09`) ────────────────────────────────────────────────────── */
+
+/* `px-6 py-4` es la medida más importante del sistema. La primera columna es el avatar del
+   score: 32 px, círculo. */
+:is(#v-closer, .estetica-op) .md-r {
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  transition: background .15s ease, opacity .15s ease;
+}
+:is(#v-closer, .estetica-op) .md-r:hover { background: rgb(var(--c-nube) / .04); }
+:is(#v-closer, .estetica-op) .md-time {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--txt-dim);
+  background: rgb(var(--c-nube) / .08);
+}
+/* En la agenda de hoy la primera columna es una HORA, no un score: no cabe en un círculo. */
+:is(#v-closer, .estetica-op) .md-sec[data-cola='agenda'] .md-r { grid-template-columns: 40px minmax(0, 1fr) auto; }
+:is(#v-closer, .estetica-op) .md-sec[data-cola='agenda'] .md-time {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--etapa-agendado);
+  font-variant-numeric: tabular-nums;
+}
+:is(#v-closer, .estetica-op) .md-nm {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+/* El microtexto se recorta antes de empujar los iconos: sin el tope, un texto largo desalinea la
+   fila de iconos con las demás filas (`09` § 2.4). Solo el de la fila, no los bloques de abajo. */
+:is(#v-closer, .estetica-op) .md-r > div > .md-sub {
+  font-size: 11.5px;
+  margin-top: 3px;
+  color: var(--txt-dim);
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* La completada se atenúa y conserva todo; solo el nombre se tacha, con su propio color de raya.
+   Y todo lo atenuado recupera opacidad al pasar el mouse (`02` § 8). */
+:is(#v-closer, .estetica-op) .md-r.md-done { opacity: .75; }
+:is(#v-closer, .estetica-op) .md-r.md-done:hover { opacity: 1; }
+:is(#v-closer, .estetica-op) .md-done .md-nm {
+  text-decoration: line-through;
+  text-decoration-color: rgb(var(--c-nube) / .4);
+  color: var(--txt-dim);
+}
+:is(#v-closer, .estetica-op) .md-quote { margin-left: calc(20px + 28px + 12px); }
+
+/* La píldora: 9 px, negrita, mayúsculas, círculo completo, con borde. Tono 50 sólido en claro y
+   500 al 20 % en oscuro es lo que hace el par `rgb(var(--c-…) / .10)` + texto en el token. */
+:is(#v-closer, .estetica-op) .tagx {
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+:is(#v-closer, .estetica-op) .tagx.nu   { background: rgb(var(--c-nube) / .06); color: var(--txt-dim); border-color: var(--line); }
+:is(#v-closer, .estetica-op) .tagx.ag   { background: rgb(var(--c-acento) / .10); color: var(--accent); border-color: rgb(var(--c-acento) / .25); }
+:is(#v-closer, .estetica-op) .tagx.seg  { background: rgb(var(--c-warn) / .10); color: var(--warn); border-color: rgb(var(--c-warn) / .25); }
+:is(#v-closer, .estetica-op) .tagx.venc,
+:is(#v-closer, .estetica-op) .tagx.no   { background: rgb(var(--c-crit) / .10); color: var(--crit); border-color: rgb(var(--c-crit) / .25); }
+
+/* ── LOS SEIS ICONOS DE ESTADO ──────────────────────────────────────────────
+ *
+ * Dejaron de ser glifos de texto: ahora es un `<svg><use href="#i-f-…"></svg>` del sprite. Eso
+ * cambia qué reglas hacen algo, y conviene decirlo porque las de antes NO se pueden reciclar: un
+ * `<svg>` no responde a `font-size` ni a `text-align`, que era todo lo que la regla anterior le
+ * daba. Hay que dimensionarlo.
+ *
+ * Y se fue el secuestro de token que había acá. Decía `--txt: var(--icono)`, con este motivo:
+ * *«el componente pinta el encendido con `color: var(--txt)` en línea, y un estilo en línea no se
+ * puede pisar desde una hoja — pero sí se puede redefinir el token que lee»*. Era correcto y era
+ * una trampa: dejaba `--txt` valiendo un gris para todo descendiente de `.md-acts`. Ahora el
+ * componente pone CLASES y el color lo decide esta hoja, así que el token vuelve a significar una
+ * sola cosa. */
+:is(#v-closer, .estetica-op) .md-acts {
+  gap: 7px;
+  color: var(--icono);
+}
+:is(#v-closer, .estetica-op) .md-acts i {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+:is(#v-closer, .estetica-op) .md-acts svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* Los TRES estados, que el `11` § 9 regla 1 exige mantener separados: «no medido» y «medido en
+   cero» no son el mismo hecho, y a simple vista se parecen — de ahí que el componente además lo
+   diga en el `title`. */
+:is(#v-closer, .estetica-op) .md-acts i.sin-medir { opacity: .28; }
+:is(#v-closer, .estetica-op) .md-acts i.apagado   { opacity: .5; }
+/* Y el encendido en el ACENTO, que es lo que se pidió: hasta ahora el encendido era el gris del
+   texto, un tono más oscuro que el apagado, y no se leía como encendido. */
+:is(#v-closer, .estetica-op) .md-acts i.on {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* El número al lado del dibujo. `tabular-nums` para que un 2 y un 11 no muevan el icono de la
+   derecha: la fila tiene seis y cualquier corrimiento se ve como desalineación. */
+:is(#v-closer, .estetica-op) .md-cnt {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+/* «Unirse»: verde sólido, reservado para la próxima llamada con sala (`08` § 3). */
+:is(#v-closer, .estetica-op) .md-join {
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  background: var(--ok-lleno);
+  color: var(--sobre-ok-lleno);
+}
+
+/* ── 3-bis · El buscador de leads del Pipeline ─────────────────────────────
+ *
+ * El `10` § 1 lo dibuja dentro de una barra de filtros —una bandeja `bg-muted/10` con seis
+ * controles a la misma altura—. Acá hay un control y no seis, así que la bandeja sería un marco
+ * alrededor de un solo campo: queda el campo, con la forma que esa barra le da a los suyos
+ * (cápsula, contorno al 60 %, foco de la marca).
+ *
+ * Las medidas siguen la escala de la hoja: el `10` le pone `h-10` (40 px) sobre una base de 16, que
+ * acá son 32.
+ *
+ * ── EL TAMAÑO DEL TEXTO ES 16 px EN MÓVIL, Y NO ES UN DESCUIDO ────────────
+ *
+ * Es el único lugar de esta hoja donde un valor SUBE en pantalla angosta. El `10` § 1 lo explica y
+ * es un comportamiento del navegador, no una preferencia: con menos de 16 px, Safari y Chrome de
+ * móvil **hacen acercamiento al enfocar el campo** y dejan la pantalla corrida. Con 16 no. */
+
+:is(#v-closer, .estetica-op) .pipe-buscar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+:is(#v-closer, .estetica-op) .pipe-buscar > label {
+  margin: 0;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+}
+:is(#v-closer, .estetica-op) .pipe-buscar-caja {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+:is(#v-closer, .estetica-op) .pipe-q {
+  width: 260px;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 30px 0 13px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--txt);
+  background: var(--bg-panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 9999px;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+@media (min-width: 768px) {
+  :is(#v-closer, .estetica-op) .pipe-q { font-size: 11.5px; }
+}
+:is(#v-closer, .estetica-op) .pipe-q::placeholder { color: var(--txt-faint); opacity: 1; }
+/* El foco es de la marca, como el `--ring` del sistema, y va como `outline`. La primera versión lo
+   dibujó con un `box-shadow` de tres píxeles y `107-sin-sombras` lo rechazó — con razón: este
+   proyecto pasó TODO el foco de sombra a contorno, y una sombra nueva en esta capa es la que el
+   barrido universal no puede apagar. El contorno sigue el radio de la cápsula solo. */
+:is(#v-closer, .estetica-op) .pipe-q:focus-visible {
+  border-color: rgb(var(--c-acento) / .5);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* El botón de limpiar, dentro del campo. `absolute` y no un hermano al costado para que el campo
+   siga siendo una sola cápsula: al lado, la cápsula se partiría en dos formas. */
+:is(#v-closer, .estetica-op) .pipe-q-x {
+  position: absolute;
+  right: 3px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--txt-faint);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  transition: color .15s ease, background .15s ease;
+}
+:is(#v-closer, .estetica-op) .pipe-q-x:hover { color: var(--txt); background: rgb(var(--c-nube) / .1); }
+/* Y se esconde el botón nativo de `type="search"` en los navegadores que lo dibujan: con los dos
+   quedan dos cruces, y la nativa no sigue el tema. */
+:is(#v-closer, .estetica-op) .pipe-q::-webkit-search-cancel-button { display: none; }
+
+:is(#v-closer, .estetica-op) .pipe-q-n {
+  font-size: 11.5px;
+  color: var(--txt-dim);
+}
+:is(#v-closer, .estetica-op) .pipe-q-n b { color: var(--txt); font-weight: 600; }
+:is(#v-closer, .estetica-op) .pipe-q-n em { font-style: normal; color: var(--warn); }
+
+/* ── 4 · Inicio: el bloque de la comisión (`07`) ───────────────────────────── */
+
+/* Era el único bloque que no seguía los tokens del tema: negro y dorado, y negro también en claro.
+   Con la marca v2 es una tarjeta más (`--negro-hero` es `bg-alt`) y su dinero va en el blanco de la
+   marca, como todo el dinero (`NE-26`). Lo que conserva es la jerarquía de adentro —baldosas, anillo,
+   notas—, escrita como opacidades del blanco: el bloque redefine los tokens de texto, línea y fondo
+   que esas reglas consumen. Las señales ya no las redefine: son las del tema.
+
+   Los textos al 40 % y al 30 % de algunas reglas de acá abajo no llegan a 4,5:1 (3,5 y 2,5 sobre
+   `bg-alt`), y no los arregla ningún token porque la opacidad está escrita en la regla. Están en el
+   inventario de la fase de detalles (`brand/MIGRACION.md`). */
+:is(#v-closer, .estetica-op) .ck-hero {
+  --txt:          rgb(var(--c-blanco) / .92);
+  --txt-dim:      rgb(var(--c-blanco) / .60);
+  --txt-faint:    rgb(var(--c-blanco) / .40);
+  --line:         rgb(var(--c-blanco) / .10);
+  --line-strong:  rgb(var(--c-blanco) / .18);
+  --c-nube:       var(--c-blanco);
+  --bg-sunk:      rgb(var(--c-blanco) / .05);
+  --bg-panel:     rgb(var(--c-blanco) / .05);
+  --bg-raise:     rgb(var(--c-blanco) / .08);
+  --bg-float:     rgb(var(--c-blanco) / .08);
+  --carril-del-arco: rgb(var(--c-blanco) / .06);
+
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radio-tarjeta);
+  padding: 24px;
+  background: var(--negro-hero);
+  border: 1px solid rgb(var(--c-blanco) / .05);
+  box-shadow: none;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 24px;
+  align-items: center;
+  color: var(--txt);
+}
+@media (min-width: 640px) {
+  :is(#v-closer, .estetica-op) .ck-hero { padding: 34px; }
+}
+@media (max-width: 760px) {
+  :is(#v-closer, .estetica-op) .ck-hero { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── EL HERO DEL SETTER LLEVA DOS ANILLOS, Y ESO NECESITA SU PROPIA COLUMNA ──
+ *
+ * Es el único choque real que produjo extender la estética al Setter, y no se ve mirando el
+ * selector: la regla de arriba fija `230px`, pensada para el anillo ÚNICO del Closer. El Setter usa
+ * `.ck-hero.ck-hero-dos` y apila dos anillos de comisión —el suyo y el del equipo— con una línea
+ * entre medio; sus `260px` y su `align-items: start` los pone `aios.css:2192`, con especificidad de
+ * clase. La regla de arriba lleva un `#id`, así que le gana: los dos anillos quedaban apretados en
+ * la columna de uno y centrados en vez de alineados arriba.
+ *
+ * Va DESPUÉS y con la misma especificidad más una clase, así que gana por las dos vías. Y repone
+ * los dos valores del prototipo en vez de inventar otros: lo que cambia con la estética nueva es el
+ * aire y el radio, no cuántos anillos entran. */
+:is(#v-closer, .estetica-op) .ck-hero.ck-hero-dos {
+  grid-template-columns: minmax(0, 1fr) 260px;
+  align-items: start;
+}
+@media (max-width: 760px) {
+  :is(#v-closer, .estetica-op) .ck-hero.ck-hero-dos { grid-template-columns: minmax(0, 1fr); }
+}
+/* El resplandor: un círculo de 800 px al 5 % del color del dinero —dorado en el documento, el
+   blanco de la marca desde la marca v2—, difuminado 100 px, latiendo cada 4 s. La marca no lleva
+   resplandores: está en el inventario de la fase de detalles (`brand/MIGRACION.md`). Se promueve a
+   su propia capa para que el difuminado se rasterice una vez y el pulso corra en el compositor. Y
+   respeta a quien pidió menos movimiento. */
+:is(#v-closer, .estetica-op) .ck-hero::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: rgb(var(--c-oro) / .05);
+  filter: blur(100px);
+  transform: translate(-50%, -50%) translateZ(0);
+  will-change: opacity;
+  pointer-events: none;
+  animation: ck-pulso 4s ease-in-out infinite;
+}
+@keyframes ck-pulso {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .5; }
+}
+:is(#v-closer, .estetica-op) .ck-hero > * { position: relative; z-index: 1; }
+
+/* El chip del período: «cristal sobre negro» — borde blanco al 10 %, fondo al 5 %, desenfoque. */
+:is(#v-closer, .estetica-op) .ck-tag {
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--c-blanco) / .10);
+  background: rgb(var(--c-blanco) / .05);
+  backdrop-filter: blur(12px);
+  color: var(--oro);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+/* El titular de dinero: 90 px livianos y apretados, con un degradado recortado al texto que,
+   desde la marca v2, tiene sus tres puntos en el blanco del dinero: es plano. Sin el brillo exterior
+   del documento — ver el encabezado. */
+:is(#v-closer, .estetica-op) .ck-big {
+  margin-top: 0;
+  font-size: clamp(46px, 5.4vw, 70px);
+  font-weight: 300;
+  letter-spacing: -.05em;
+  line-height: .9;
+  background: linear-gradient(to bottom right, rgb(var(--c-blanco)), var(--oro-claro), var(--oro-hondo));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--oro);
+}
+:is(#v-closer, .estetica-op) .ck-big span {
+  display: block;
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0;
+  color: rgb(var(--c-blanco) / .6);
+  -webkit-text-fill-color: rgb(var(--c-blanco) / .6);
+  background: none;
+}
+:is(#v-closer, .estetica-op) .ck-note {
+  margin-top: 18px;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgb(var(--c-blanco) / .6);
+}
+:is(#v-closer, .estetica-op) .ck-note em { color: inherit; }
+/* El punto que pulsa significa «esto está vivo». */
+:is(#v-closer, .estetica-op) .ck-note .pt {
+  width: 6px;
+  height: 6px;
+  background: rgb(var(--c-ok) / .8);
+  animation: ck-pulso 2s ease-in-out infinite;
+}
+/* La rejilla de cuatro cifras: rótulo 10 px al 40 %, valor 24 px liviano, base 10 px al 30 %.
+   La jerarquía dentro del bloque es opacidad del blanco: 90 / 60 / 40 / 30. */
+:is(#v-closer, .estetica-op) .ck-row {
+  margin-top: 28px;
+  padding-top: 18px;
+  gap: 12px;
+  border-top: 1px solid rgb(var(--c-blanco) / .10);
+}
+:is(#v-closer, .estetica-op) .ck-i { padding: 0; border-right: 0; }
+:is(#v-closer, .estetica-op) .ck-i .k {
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgb(var(--c-blanco) / .4);
+}
+:is(#v-closer, .estetica-op) .ck-i .v {
+  margin-top: 3px;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -.02em;
+}
+:is(#v-closer, .estetica-op) .ck-i .s { margin-top: 4px; font-size: 10px; color: rgb(var(--c-blanco) / .3); }
+@media (max-width: 640px) {
+  :is(#v-closer, .estetica-op) .ck-row { grid-template-columns: 1fr 1fr; gap: 24px 16px; }
+}
+
+/* El anillo de comisión: trazo fino sobre un carril blanco al 5 %. La caja pierde su borde y su
+   degradado: el SVG dibuja el aro. */
+:is(#v-closer, .estetica-op) .ring {
+  width: 158px;
+  height: 158px;
+  border: 0;
+  background: none;
+}
+:is(#v-closer, .estetica-op) .ring b { font-size: 25px; font-weight: 300; letter-spacing: -.025em; color: var(--txt); }
+:is(#v-closer, .estetica-op) .ring span {
+  margin-top: 4px;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgb(var(--c-blanco) / .4);
+}
+:is(#v-closer, .estetica-op) .ck-rotulo { font-size: 9px; letter-spacing: .1em; color: rgb(var(--c-blanco) / .4); }
+/* La tarjeta de la meta: cristal sobre negro, `rounded-2xl p-4`. */
+:is(#v-closer, .estetica-op) .ck-cta {
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid rgb(var(--c-blanco) / .10);
+  background: rgb(var(--c-blanco) / .05);
+  backdrop-filter: blur(4px);
+  font-size: 11.5px;
+  font-weight: 300;
+  color: rgb(var(--c-blanco) / .7);
+}
+:is(#v-closer, .estetica-op) .ck-cta b { color: var(--oro); font-weight: 500; }
+:is(#v-closer, .estetica-op) .ck-hero .fd-btn.sec {
+  background: rgb(var(--c-blanco) / .05);
+  border-color: rgb(var(--c-blanco) / .10);
+  color: rgb(var(--c-blanco) / .8);
+}
+:is(#v-closer, .estetica-op) .ck-hero .fd-aviso { background: rgb(var(--c-blanco) / .04); }
+
+/* El selector «ver como»: una cápsula. */
+#v-closer .ck-vercomo label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--txt-dim);
+}
+/* ── LA CÁPSULA ES DEL CONTROL SUELTO, NO DEL CAMPO DE FORMULARIO ──────────
+ *
+ * Esta regla se escribió acá abajo, pegada al comentario de «ver como», para UN control: el
+ * `<select>` de `components/closer/Inicio.jsx`, que es un mando de la pantalla y por eso toma la
+ * forma de píldora. Y estaba escrita como `select` a secas.
+ *
+ * Con el alcance en una sola vista eso ya se derramaba, y nadie lo miró: `QuienEsElCloser` y
+ * `Avanzar` tienen sus `<select>` dentro de un `.fd-campo`, o sea que HOY, en el Closer, un
+ * desplegable de formulario se dibuja como píldora de radio completo al lado de un `<input>` de
+ * 9 px. Con nueve pantallas más —Ajustes, ICP, Tools y Monitoreo están llenas de formularios— eso
+ * pasaba de una rareza a la forma normal de la aplicación.
+ *
+ * Y traía algo peor que la forma. `background:` de atajo BORRA `background-image`, que es donde
+ * `fundaciones.css` y `ajustes.css` dibujan la flecha del desplegable; y `appearance: none`, que
+ * esas hojas también ponen, sobrevive. Resultado medido: un desplegable **sin ninguna flecha**,
+ * indistinguible de un campo de texto. No hay error, no hay consola.
+ *
+ * Así que la cápsula queda para el `<select>` que NO es un campo: el de `.fd-campo` y el de
+ * `.row-i` siguen con la gramática del formulario, que es la que tiene su etiqueta arriba, su
+ * flecha y su radio de 9 px. Y `background-color` en vez del atajo, para no volver a borrar el
+ * dibujo de nadie.
+ *
+ * `.es-select` —el «dónde espiar» del Espía de Anuncios— también queda afuera, y por una razón
+ * que se ve sólo al medirla: cambiar a `background-color` le devolvió la flecha, pero la cápsula
+ * le imponía `padding: 0 12px` y su flecha se dibuja a 10 px del borde derecho contando con el
+ * `padding-right: 30px` que su propia regla reserva. O sea que la flecha volvía encima del texto.
+ * La regla general puede devolver un dibujo; no puede devolver el sitio donde ese dibujo cabe.
+ *
+ * El criterio, dicho de una vez: si otra hoja YA diseñó ese desplegable entero —`appearance:
+ * none`, su flecha y el hueco para ella—, esta hoja no se mete. */
+:is(#v-closer, .estetica-op) :not(.fd-campo, .row-i) > select:not(.es-select) {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--txt);
+  background-color: var(--bg-panel);
+  border: 1px solid var(--line-strong);
+}
+:is(#v-closer, .estetica-op) .aj-tarjeta { padding: 18px; }
+#v-closer .ck-closer {
+  padding: 13px;
+  border-radius: 14px;
+  background: rgb(var(--c-nube) / .03);
+  border: 1px solid var(--line);
+}
+
+/* ── 5 · Agenda (`11`) ─────────────────────────────────────────────────────── */
+
+/* Dos columnas con la separación más grande de la aplicación (40 px), alineadas ARRIBA: sin
+   `items-start` el calendario se estira a la altura del día. */
+#v-closer .ag { gap: 28px; }
+#v-closer .ag-lado { gap: 18px; }
+#v-closer .ag-mes,
+#v-closer .ag-proximos { padding: 18px; }
+#v-closer .ag-dia { padding: 24px; }
+#v-closer .ag-mes-t { font-size: 13px; font-weight: 600; letter-spacing: 0; }
+#v-closer .ag-mes-nav button { width: 28px; height: 28px; border-radius: 9999px; }
+#v-closer .ag-grilla { gap: 4px; }
+#v-closer .ag-sem { font-size: 10px; font-weight: 700; letter-spacing: 0; height: 24px; }
+#v-closer .ag-hueco { height: 28px; }
+/* El día: círculo de 32 px. Seleccionado y hoy son estados DISTINTOS y se ven distintos: el
+   seleccionado es un círculo sólido del acento; hoy es solo un anillo de 1 px al 40 %. Si coinciden,
+   gana el seleccionado — y el punto de citas se esconde sobre el relleno sólido. */
+#v-closer .ag-celda {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+  border-radius: 50%;
+  font-size: 12px;
+  border: 1px solid transparent;
+}
+#v-closer .ag-celda:hover:not(:disabled) { background: rgb(var(--c-nube) / .08); }
+#v-closer .ag-celda.hoy,
+#v-closer .ag-celda.hoy:hover:not(:disabled) {
+  background: none;
+  color: var(--txt);
+  font-weight: 400;
+  border-color: rgb(var(--c-acento) / .4);
+}
+#v-closer .ag-celda.abierta,
+#v-closer .ag-celda.abierta:not(.hoy),
+#v-closer .ag-celda.abierta:hover:not(:disabled) {
+  background: var(--accent-hondo);
+  color: var(--sobre-acento);
+  font-weight: 600;
+  border-color: transparent;
+}
+#v-closer .ag-punto { width: 4px; height: 4px; bottom: 4px; background: var(--etapa-agendado); }
+#v-closer .ag-celda.abierta .ag-punto,
+#v-closer .ag-celda.hoy .ag-punto { display: none; }
+#v-closer .ag-celda.hoy .ag-punto { display: block; background: var(--etapa-agendado); }
+#v-closer .ag-leyenda { font-size: 11px; }
+
+#v-closer .ag-proximos-t { font-size: 11px; letter-spacing: .1em; margin-bottom: 12px; }
+/* El inactivo lleva borde transparente, no ausencia de borde: si no, el elemento salta 1 px al
+   activarse. */
+#v-closer .ag-prox {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+#v-closer .ag-prox:hover:not(:disabled) { background: rgb(var(--c-nube) / .05); }
+#v-closer .ag-prox.on {
+  background: rgb(var(--c-acento) / .05);
+  border-color: rgb(var(--c-acento) / .10);
+  color: var(--accent);
+  font-weight: 500;
+}
+#v-closer .ag-prox-n { font-size: 13px; font-weight: 500; }
+#v-closer .ag-prox-c {
+  height: 22px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgb(var(--c-nube) / .08);
+  color: var(--txt-dim);
+}
+#v-closer .ag-prox-c.hay { background: rgb(var(--c-acento) / .10); color: var(--accent); }
+
+#v-closer .ag-dia-h { margin-bottom: 18px; align-items: flex-end; }
+#v-closer .ag-dia-t { font-size: 20px; font-weight: 600; letter-spacing: -.025em; }
+#v-closer .ag-dia-s { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+#v-closer .ag-linea { gap: 12px 18px; }
+#v-closer .ag-hora { font-size: 13px; font-weight: 700; padding-top: 13px; }
+/* Una cita vencida es ATENCIÓN, no urgencia: ámbar, no rojo (`03` § 1). */
+#v-closer .ag-hora.pasada { color: var(--warn); }
+/* El nodo de la sala: 32 px, círculo, celeste, con un anillo del color del lienzo. */
+#v-closer .ag-sala {
+  width: 28px;
+  height: 28px;
+  margin-top: 9px;
+  border-radius: 50%;
+  border: 0;
+  background: rgb(var(--c-etapa-agendado) / .15);
+  color: var(--etapa-agendado);
+}
+#v-closer .ag-sala:hover:not(:disabled) { background: rgb(var(--c-etapa-agendado) / .28); }
+/* La tarjeta de la cita es OPACA: está sobre otra translúcida, y dos capas translúcidas apiladas
+   dejan de leerse. Su `hover` cambia el color del borde a celeste — el único lugar. */
+#v-closer .ag-cita {
+  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+}
+#v-closer .ag-cita:hover,
+#v-closer .ag-cita.abierta { border-color: rgb(var(--c-etapa-agendado) / .6); }
+#v-closer .ag-cita-h { padding: 16px; gap: 10px; }
+#v-closer .ag-cita-av { background: rgb(var(--c-acento) / .10); color: var(--accent); }
+#v-closer .ag-cita-n { font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+#v-closer .ag-cita-m { font-size: 11.5px; }
+#v-closer .ag-cita-cuerpo { padding: 0 16px 16px 54px; gap: 10px; }
+#v-closer .ag-mas { border-radius: 9999px; }
+#v-closer .ag-barra { margin-bottom: 8px; }
+
+/* ── 6 · La ficha (`12`) ───────────────────────────────────────────────────── */
+
+/* La capa de fondo: negro al 40 % con 1 px de desenfoque. Aparta la pantalla de atrás, no la
+   oculta: quien abre la ficha tiene que seguir viendo dónde estaba. */
+:is(#v-closer, .estetica-op) .scrim {
+  background: rgb(var(--c-sombra) / .4);
+  backdrop-filter: blur(1px);
+}
+/* El panel: 540 px, borde solo a la izquierda, sin sombra, entra desde la derecha en 300 ms. */
+:is(#v-closer, .estetica-op) .cw {
+  width: 540px;
+  background: var(--ficha-fondo);
+  border-left: 1px solid rgb(var(--c-nube) / .20);
+  box-shadow: none;
+  transition: transform .3s cubic-bezier(.32, .72, 0, 1);
+}
+/* La cabecera: cristal sobre el panel, con el desenfoque más fuerte del sistema (24 px) sobre un
+   fondo al 80 %. */
+:is(#v-closer, .estetica-op) .cw-h {
+  padding: 24px 20px 18px;
+  background: rgb(var(--c-panel) / .8);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--line);
+}
+:is(#v-closer, .estetica-op) .cw-av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  font-size: 13px;
+  background: rgb(var(--c-acento) / .10);
+  color: var(--accent);
+}
+:is(#v-closer, .estetica-op) .cw-n { font-size: 15px; font-weight: 600; letter-spacing: -.025em; }
+:is(#v-closer, .estetica-op) .cw-p { font-size: 12px; margin-top: 2px; }
+:is(#v-closer, .estetica-op) .cw .cw-x {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: none;
+  border-color: transparent;
+}
+:is(#v-closer, .estetica-op) .cw .cw-x:hover { background: rgb(var(--c-nube) / .08); border-color: transparent; }
+/* Avanzar es el botón más importante de la aplicación y su tratamiento lo dice: el más alto, el
+   más ancho, el de texto más grande, y del color del texto — invertido entre temas. */
+:is(#v-closer, .estetica-op) .cw-acciones .cw-go {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 0;
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--txt);
+  color: var(--bg);
+  transition: opacity .15s ease;
+}
+:is(#v-closer, .estetica-op) .cw-acciones .cw-go:hover { background: var(--txt); opacity: .9; }
+:is(#v-closer, .estetica-op) .cw-meta { margin-top: 15px; }
+/* La barra de pestañas de la ficha es el patrón INVERTIDO al del Closer: fondo más oscuro que el
+   panel y la activa más clara. Cinco pestañas de 11 px no aguantan un relleno sólido. El hijo
+   lleva menos radio que el padre: 16 → 12. */
+:is(#v-closer, .estetica-op) .cw-tabs {
+  margin: 12px 20px 0;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgb(var(--c-nube) / .06);
+}
+:is(#v-closer, .estetica-op) .cw-tabs button {
+  flex: 1;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+:is(#v-closer, .estetica-op) .cw-tabs button:hover { background: none; color: var(--txt); }
+:is(#v-closer, .estetica-op) .cw-tabs button.on {
+  background: var(--bg-panel);
+  color: var(--txt);
+  font-weight: 500;
+}
+:is(#v-closer, .estetica-op) .cw-body { padding: 12px 20px 16px; }
+
+/* El chat imita a WhatsApp, y la imitación es la función. Sus colores son prestados, no del tema;
+   viven en `temas.css` como `--chat-*`. */
+:is(#v-closer, .estetica-op) .cw-body:has(> .cw-chat) { background: var(--chat-fondo); padding: 16px; }
+/* ── LOS DOS VALORES QUE **NO** SIGUEN LA ESCALA, Y ES A PROPÓSITO ─────────
+   El ancho del panel (540 px) y el cuerpo de la burbuja (14,5 px). Ninguno de los dos viene de la
+   escala tipográfica del sistema: el ancho es una medida de panel —no se lee «con zoom», se lee
+   angosto o ancho— y el 14,5 es el tamaño del cliente que el chat IMITA. Achicarlo rompería
+   justamente lo que el `12` § 4 dice que es la función: *«el vendedor pasa el día en WhatsApp, y una
+   conversación que se ve distinta se lee como si fuera otra cosa»*. Es el único texto de la pantalla
+   más grande que el cuerpo de la aplicación, y tiene que serlo. */
+:is(#v-closer, .estetica-op) .cw-chat .msgw {
+  max-width: 85%;
+  padding: 6px 12px 8px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--chat-texto);
+}
+/* La esquina cuadrada del lado del hablante es lo que convierte un rectángulo en una burbuja. */
+:is(#v-closer, .estetica-op) .cw-chat .msgw-sale,
+:is(#v-closer, .estetica-op) .cw-chat .msgw-sale:has(+ .msgw-sale) {
+  background: var(--chat-propia);
+  border-radius: 12px 0 12px 12px;
+}
+:is(#v-closer, .estetica-op) .cw-chat .msgw-entra,
+:is(#v-closer, .estetica-op) .cw-chat .msgw-entra:has(+ .msgw-entra) {
+  background: var(--chat-ajena);
+  border-radius: 0 12px 12px 12px;
+}
+:is(#v-closer, .estetica-op) .cw-chat .msgw.mal {
+  background: rgb(var(--c-crit) / .12);
+  border: 1px solid rgb(var(--c-crit) / .4);
+}
+:is(#v-closer, .estetica-op) .cw-chat .msgw .t { font-size: 10px; margin-top: 4px; color: var(--chat-meta); }
+:is(#v-closer, .estetica-op) .cw-chat .cw-day {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: var(--chat-dia);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--chat-meta);
+}
+:is(#v-closer, .estetica-op) .cw-chat > .cw-day:first-child { margin-top: 0; }
+/* El compositor: `p-2` —el relleno más chico de la aplicación—, `items-end` para que los botones
+   queden abajo cuando el campo crece, y el campo `rounded-3xl`, el más redondo del sistema. */
+:is(#v-closer, .estetica-op) .cw-input {
+  padding: 8px;
+  gap: 6px;
+  align-items: flex-end;
+  background: var(--chat-compositor);
+  border-top: 0;
+}
+:is(#v-closer, .estetica-op) .cw-input input {
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--chat-campo);
+  color: var(--chat-texto);
+  font-size: 14px;
+}
+:is(#v-closer, .estetica-op) .cw-input input::placeholder { color: var(--chat-meta); }
+:is(#v-closer, .estetica-op) .cw-input input:focus { border: 0; outline: 0; }
+:is(#v-closer, .estetica-op) .cw-mas {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: none;
+  color: var(--chat-meta);
+  font-size: 22px;
+}
+:is(#v-closer, .estetica-op) .cw-mas:hover:not(:disabled) { background: rgb(var(--c-nube) / .06); color: var(--chat-texto); }
+:is(#v-closer, .estetica-op) .cw-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent-hondo);
+  color: var(--sobre-acento);
+}
+:is(#v-closer, .estetica-op) .cw-send:not(:disabled):hover { background: var(--accent-hondo); opacity: .9; }
+:is(#v-closer, .estetica-op) .menu-pop {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-float);
+  box-shadow: none;
+}
+:is(#v-closer, .estetica-op) .kv-box,
+:is(#v-closer, .estetica-op) .pr-box {
+  border-radius: 12px;
+  background: rgb(var(--c-nube) / .04);
+}
+
+/* ── 8 · El supervisor de Conversation (`aud-*`) ────────────────────────────
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ERA `#v-conversation`, Y AHORA ES `#v-conversation`
+ *
+ * Estas reglas visten las dos pestañas del supervisor —«Auditoría» y «Prompts»—, que hasta la
+ * mudanza eran una pantalla propia del grupo «Operación». No cambió ni una declaración: cambió el
+ * `#id` del que cuelgan, porque el mismo panel se dibuja ahora dentro de Conversation.
+ *
+ * La familia sigue llamándose `aud-*` y su hoja sigue siendo `app/auditoria.css`, a propósito: es
+ * el vocabulario del AUDITOR —`lib/auditor/`, sus tablas, sus rutas—, y eso no se mudó. Renombrar
+ * cuarenta clases para que dijeran `cs-` habría sido un cambio grande que no arregla nada y rompe
+ * las tres pruebas que leen esos nombres.
+ *
+ * ESTA SECCIÓN EXISTE PORQUE EL SUPERVISOR NO COMPARTE UN SOLO COMPONENTE
+ *
+ * Con el Setter alcanzó el cambio de selector: su chrome es el mismo DOM y `MiDia`, `Fila`,
+ * `Ficha` y las demás son literalmente los mismos archivos, así que las reglas de arriba ya lo
+ * vestían. Auditoría es otro caso: **reimplementó por su cuenta los siete conceptos** —tarjeta,
+ * sección, fila, avisos, botones, píldoras y plegable— con su propia familia `aud-*`.
+ *
+ * O sea que extender el alcance le trajo la paleta, la tipografía, los anillos de foco y la
+ * cápsula de pestañas, y **nada más**: sus tarjetas seguían con radio de 14 px y fondo opaco al
+ * lado de los 26 px translúcidos de las otras dos. Esto es esa mitad.
+ *
+ * Va acá y no en `app/auditoria.css` por la misma división que el resto de la hoja: allá vive la
+ * FORMA base —la que hace que la pantalla funcione en cualquier parte— y acá el refinamiento de
+ * esta estética. Es lo mismo que pasa con `.fd-aviso`, `.fd-btn` y el buscador del Pipeline.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── LA BARRA DE PESTAÑAS SE FUE ────────────────────────────────────────────
+ *
+ * Acá había dos reglas para la barra `.cl-sub` de Conversation —que no quedara centrada y que el
+ * contador de prompts que faltan siguiera en ámbar—. Desde el 2026-10-10 (CN-3) Auditoría y
+ * Prompts son dos modos del selector del prototipo, `.mode-seg`, y nadie dibuja esa barra en la
+ * pantalla. Lo de abajo sigue: viste lo que el supervisor dibuja adentro de los dos modos. */
+
+/* ── LA TARJETA: el bloque de un agente y el cuadro de un prompt ───────────
+ *
+ * Son las dos tarjetas grandes de esta pantalla, y pasan a la misma forma que `.md-c` y
+ * `.aj-tarjeta`: el radio de tarjeta, translúcida con desenfoque. Sin el `backdrop-filter` la tarjeta
+ * se ve como un rectángulo semitransparente — van siempre juntos, igual que arriba. */
+#v-conversation .aud-agente,
+#v-conversation .aud-prompt {
+  border-radius: var(--radio-tarjeta);
+  background: rgb(var(--c-panel) / .5);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--line);
+  padding: 20px 22px 22px;
+  margin-bottom: 0;
+}
+
+/* El icono de la zona, alineado con el radio nuevo. */
+#v-conversation .aud-agente-icono {
+  border-radius: var(--radio);
+  background: rgb(var(--c-nube) / .06);
+}
+
+/* El nombre del agente toma el peso de los titulares de la estética: 300 y apretado, no 650. */
+#v-conversation .aud-agente-quien h3,
+#v-conversation .aud-prompt-cabeza h4 {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -.02em;
+}
+
+/* ── LA PÍLDORA: los chips del semáforo y la zona del agente ───────────────
+ *
+ * `.tagx` es 8,5 px en mayúsculas con `.05em`; `.aud-chip` era 10,5 px en minúsculas. Se igualan,
+ * porque son lo mismo: una etiqueta corta al lado de un nombre.
+ *
+ * Lo que NO se toca es qué color lleva cada uno. El semáforo tiene su regla —verde, amarillo,
+ * rojo, y el cero en neutro, en ese orden y ganando por orden— y `122-pantalla-de-auditoria` la
+ * lee. Acá solo cambia la forma. */
+#v-conversation .aud-chip {
+  padding: 1px 7px;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+#v-conversation .aud-agente-zona {
+  padding: 1px 7px;
+  font-size: 8.5px;
+  letter-spacing: .05em;
+  border: 1px solid rgb(var(--c-acento) / .25);
+}
+
+/* ── LA SECCIÓN: el encabezado de patrones y de conversaciones ─────────────
+ *
+ * `.md-h` es el rótulo de sección de las otras dos: 12 px, mayúsculas, `.025em`. `.aud-seccion-
+ * cabeza h4` era 12 px en minúsculas con `.01em`. Se iguala el idioma; la línea de abajo se
+ * queda, porque acá la sección no es una caja con fondo sino un título con su regla. */
+#v-conversation .aud-seccion-cabeza h4 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+
+/* ── LA FILA: la cabecera de un patrón ─────────────────────────────────────
+ *
+ * `.md-r` es `12px 20px`. La del patrón era `10px 14px`, calibrada contra el relleno viejo de la
+ * tarjeta. Y el hover sube de 3,5 % a 4 %: ese valor estaba copiado de `aios.css`, o sea
+ * calibrado contra el lienzo VIEJO, y el lienzo de esta estética es más claro en el tema claro. */
+#v-conversation .aud-patron-cabeza {
+  padding: 11px 4px;
+  font-size: 12.5px;
+}
+#v-conversation .aud-patron-cabeza:hover { background: rgb(var(--c-nube) / .04); }
+#v-conversation .aud-patron-cuerpo { padding: 0 4px 14px; }
+#v-conversation .aud-conv { padding: 10px 4px; }
+
+/* ── EL PLEGABLE ───────────────────────────────────────────────────────────
+ *
+ * Acá el botón es la CABECERA ENTERA y no un círculo de 24 px como `.sec-plegar`, y eso se
+ * conserva a propósito: su comentario en `app/auditoria.css` dice que *«un triángulo de diez
+ * píxeles es un blanco que se falla»*, y tiene razón. Solo se alinea la flecha con el resto. */
+#v-conversation .aud-flecha { color: var(--txt-faint); font-size: 9px; }
+
+/* ── EL AVISO ──────────────────────────────────────────────────────────────
+ *
+ * `.aud-aviso` es el `.fd-aviso.falta` de esta pantalla: la misma advertencia sin daño. Se le da
+ * el mismo tinte y el mismo borde en vez del canto izquierdo de 3 px, que es de otra gramática. */
+#v-conversation .aud-aviso {
+  border: 1px solid rgb(var(--c-warn) / .25);
+  border-radius: var(--radio);
+  background: rgb(var(--c-warn) / .08);
+  padding: 9px 13px;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+/* ── EL CÓDIGO ─────────────────────────────────────────────────────────────
+ *
+ * El fragmento de prompt y el `textarea`. La monoespaciada NO se toca —es lo que hace legible una
+ * cita con viñetas y sangría— y tampoco el `pre-wrap`. Solo el radio, para que el bloque hundido
+ * no sea el único con esquinas de otra escala. */
+#v-conversation .aud-texto,
+#v-conversation .aud-prompt-caja {
+  border-radius: var(--radio);
+  padding: 10px 12px;
+}
+
+/* ── 7 · Avisos, botones y estados (`13`) ──────────────────────────────────── */
+
+:is(#v-closer, .estetica-op) .fd-aviso {
+  padding: 9px 13px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  background: rgb(var(--c-nube) / .04);
+  border-color: var(--line);
+}
+/* La superficie usa el tinte del token; el texto va en el token mismo. Ámbar es atención sin daño,
+   rosa es urgencia y fallo. */
+:is(#v-closer, .estetica-op) .fd-aviso.falta { background: rgb(var(--c-warn) / .08); border-color: rgb(var(--c-warn) / .25); }
+:is(#v-closer, .estetica-op) .fd-aviso.mal   { background: rgb(var(--c-crit) / .06); border-color: rgb(var(--c-crit) / .25); }
+:is(#v-closer, .estetica-op) .fd-aviso.bien  { background: rgb(var(--c-ok) / .08); border-color: rgb(var(--c-ok) / .25); color: var(--ok); }
+
+/* Los botones son cápsulas de 36 px. El principal es el ÚNICO relleno sólido del acento de su
+   pantalla; el
+   secundario lleva contorno. */
+:is(#v-closer, .estetica-op) .fd-btn {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  background: var(--accent-hondo);
+  color: var(--sobre-acento);
+  box-shadow: none;
+  transition: opacity .15s ease, background .15s ease;
+}
+:is(#v-closer, .estetica-op) .fd-btn:hover:not(:disabled) { filter: none; opacity: .9; }
+:is(#v-closer, .estetica-op) .fd-btn.sec {
+  background: var(--bg-panel);
+  color: var(--txt-dim);
+  border: 1px solid var(--line-strong);
+}
+:is(#v-closer, .estetica-op) .fd-btn.sec:hover:not(:disabled) { color: var(--txt); background: rgb(var(--c-nube) / .05); border-color: var(--line-strong); }
+:is(#v-closer, .estetica-op) .fd-btn-menor { border-radius: 9999px; font-size: 10.5px; font-weight: 500; padding: 3px 10px; }
+
+/* El foco es de la marca: el anillo del acento, como `--ring` en el sistema. */
+:is(#v-closer, .estetica-op) button:focus-visible,
+:is(#v-closer, .estetica-op) select:focus-visible,
+:is(#v-closer, .estetica-op) input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Y todo lo que se mueve se queda quieto para quien pidió menos movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  :is(#v-closer, .estetica-op) .cl-page > *,
+  :is(#v-closer, .estetica-op) .ck-hero::before,
+  :is(#v-closer, .estetica-op) .ck-note .pt { animation: none; }
+  :is(#v-closer, .estetica-op) .cw { transition: none; }
+}
+
+
+/* ── 9 · Las cuatro pantallas NUESTRAS (Ajustes, ICP, Tools, Monitoreo) ─────
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ACÁ NO HUBO QUE VESTIR NADA: HUBO QUE DESPINTAR TRES COSAS
+ *
+ * Al revés que Auditoría, que reimplementó los siete conceptos con su propia familia y necesitó
+ * quince reglas de traducción. Estas cuatro ya hablan `.fd-btn`, `.fd-aviso`, `.pr-box`, `.card`,
+ * `.chip` y `.tagx` —la Etapa 9 las escribió reusando lo que había, a propósito— así que el
+ * cambio de alcance las vistió enteras. Es el caso del Setter.
+ *
+ * Lo que quedó son TRES choques, y los tres tienen la misma forma: una regla de dos o tres clases
+ * que decía algo —«esto es destructivo», «este número es el paso»— pisada por una regla de esta
+ * hoja que lleva un `#id`. Ninguno falla. Los tres se ven, si uno mira la pantalla correcta.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── EL BOTÓN DE BORRAR VUELVE A SER ROJO ──────────────────────────────────
+ *
+ * `ajustes.css` lo pinta con `.fd-btn.sec.aj-peligro` —tres clases, `0-3-0`— y la regla de arriba
+ * `.fd-btn.sec` lleva un `#id`, o sea `1-2-0`. Le gana. Medido: el botón quedaba en
+ * `rgb(82 82 91)`, exactamente el mismo gris que un secundario cualquiera. Y el `border:` de atajo
+ * se llevaba también el borde rojo.
+ *
+ * Son los seis botones de «Borrar» de Credenciales, Empresas y Usuarios. Es el mismo defecto que
+ * el contador ámbar de Auditoría, con peor consecuencia: allá dos avisos se leían igual; acá una
+ * acción que borra se ve idéntica a una que no hace nada.
+ *
+ * Su comentario original explica por qué es un secundario recoloreado y no un bloque rojo —*«seis
+ * botones rojos rellenos harían que la pantalla entera pareciera una alarma»*— y eso se conserva:
+ * vuelve el color, no el relleno. */
+#v-credenciales .fd-btn.sec.aj-peligro {
+  color: var(--crit);
+  border-color: rgb(var(--c-crit) / .26);
+}
+#v-credenciales .fd-btn.sec.aj-peligro:hover:not(:disabled) {
+  color: var(--crit);
+  border-color: rgb(var(--c-crit) / .45);
+  background: rgb(var(--c-crit) / .07);
+}
+
+/* ── LA CÁPSULA DE ICP NO QUEDA CENTRADA ────────────────────────────────────
+ *
+ * El mismo choque de Auditoría, por el mismo motivo y en una pantalla más: `align-self: center`
+ * centra la cápsula dentro de la FILA del encabezado, que es donde vive en Closer, Setter y
+ * Ajustes. Acá la emite `Fundaciones.jsx` como hermano de `.cre-head` —el componente dibuja las
+ * pestañas y el cuerpo juntos, y separarlos exigiría subir el estado— así que cuelga de
+ * `.cl-page`, un flex en columna, y ahí `center` la manda al medio de la pantalla.
+ *
+ * Iban tres pantallas con esta misma línea —Tools también, hasta que su barra se fue en la etapa E11
+ * de la nueva estructura—. Es la señal de que el `align-self: center` de la regla
+ * general está describiendo un caso particular —la cápsula que vive en el encabezado— y no el
+ * concepto; pero moverlo ahora obliga a revisar Closer, Setter y Ajustes a la vez, y eso es un
+ * cambio aparte. Queda anotado. */
+#v-icp .cl-sub { align-self: flex-start; }
+
+/* ── EL NÚMERO DEL PASO NO PUEDE SER ACENTO SOBRE ACENTO ───────────────────
+ *
+ * El gemelo exacto de `.cl-sub button.on .cnt`, y la prueba de que aquella regla no era un parche
+ * sino un concepto: cuando la pestaña activa se rellena con el acento SÓLIDO, todo lo que adentro
+ * estaba pintado con el acento desaparece.
+ *
+ * `fundaciones.css` pone `.fd-sub button.on .fd-n { color: var(--accent) }` — el número del paso
+ * en el acento para marcar el paso en curso. Medido en el tema claro, con la paleta de antes de la
+ * marca v2, sobre la cápsula nueva: `rgb(7 92 84)` sobre `rgb(7 92 84)`. Invisible.
+ *
+ * Se resuelve igual que el contador: `inherit`, o sea el color que la propia pestaña activa ya
+ * definió como legible sobre su relleno. No se elige un color nuevo — se hereda el que el sistema
+ * ya calculó, así que sigue siendo correcto el día que el acento cambie. */
+:is(#v-closer, .estetica-op) .cl-sub button.on .fd-n { color: inherit; }
+
+/* Y el punto de «hecho», que es el mismo problema en otro tono: `var(--ok)` era
+ * `rgb(4 120 87)` y el relleno de la activa, `rgb(7 92 84)`. Dos verdes oscuros, uno encima del
+ * otro. Pasa al color legible sobre el acento, con algo de transparencia para que siga leyéndose
+ * como una marca y no como un botón.
+ *
+ * NO se toca su `box-shadow`: es una de las TRES que `107-sin-sombras` cuenta, y esa prueba falla
+ * tanto si aparece una cuarta como si desaparece una de las tres. */
+:is(#v-closer, .estetica-op) .cl-sub button.on .fd-hecho {
+  background: rgb(var(--c-sobre-acento) / .85);
+}
