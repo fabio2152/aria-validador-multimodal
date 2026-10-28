@@ -1,10 +1,12 @@
-// POST: analiza una pieza (multipart/form-data). GET: el historial, paginado y filtrado.
+// POST: analiza una pieza (multipart/form-data): hasta 20 imágenes en `archivos` o en `enlaces_drive`,
+// el `copy` y el `formato_destino` (`feed` o `historia`). GET: el historial, paginado y filtrado.
 
 import { ok, rechazo } from '../../../../lib/autorizacion/respuesta.ts';
 import { base, organizacionActual } from '../../../../lib/validador/base.ts';
 import { descargarDeDrive } from '../../../../lib/validador/drive.ts';
 import type { FormatoDestino, NivelDeRiesgo } from '../../../../lib/validador/esquema.ts';
-import { analizarPieza, FORMATOS } from '../../../../lib/validador/flujo.ts';
+import { analizarPieza, FORMATOS, type ArchivoDeLaPieza } from '../../../../lib/validador/flujo.ts';
+import { MAXIMO_DE_IMAGENES } from '../../../../lib/validador/hallazgos.ts';
 import { detalleDelAnalisis, historial } from '../../../../lib/validador/registro.ts';
 import { responder } from '../../../../lib/validador/rutas.ts';
 
@@ -27,27 +29,40 @@ export async function POST(peticion: Request): Promise<Response> {
 
     const formato = texto(formulario.get('formato_destino')) ?? 'feed';
     if (!(FORMATOS as readonly string[]).includes(formato)) {
-      return rechazo('peticion_invalida', 'El formato destino debe ser feed, historia o reel.');
+      return rechazo('peticion_invalida', 'El formato destino debe ser feed (post) o historia.');
     }
 
-    let archivo: { nombre: string; tipo: string; bytes: Uint8Array } | null = null;
-    const subido = formulario.get('archivo');
-    const enlace = texto(formulario.get('enlace_drive'))?.trim() ?? '';
-    if (subido instanceof File && subido.size > 0) {
-      if (subido.size > PESO_MAXIMO_DE_SUBIDA) return rechazo('cuerpo_demasiado_grande', 'La imagen supera los 30 MB que admite Meta.');
-      archivo = { nombre: subido.name, tipo: subido.type, bytes: new Uint8Array(await subido.arrayBuffer()) };
-    } else if (enlace !== '') {
-      const drive = await descargarDeDrive(enlace);
-      if (drive.tipo === 'error') return rechazo('peticion_invalida', drive.detalle);
-      archivo = { nombre: drive.nombre, tipo: drive.tipoMime, bytes: drive.bytes };
+    // Las imágenes llegan en el orden en que se publican: varios campos `archivos`, o enlaces de Drive en
+    // `enlaces_drive`, uno por línea. Si hay archivos, los enlaces no se usan.
+    const subidos = formulario.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
+    const enlaces = (texto(formulario.get('enlaces_drive')) ?? '')
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const cuantas = subidos.length > 0 ? subidos.length : enlaces.length;
+    if (cuantas > MAXIMO_DE_IMAGENES) {
+      return rechazo('peticion_invalida', `Una pieza admite hasta ${MAXIMO_DE_IMAGENES} imágenes, el máximo de un carrusel de Instagram.`);
+    }
+
+    const archivos: ArchivoDeLaPieza[] = [];
+    if (subidos.length > 0) {
+      for (const [i, subido] of subidos.entries()) {
+        if (subido.size > PESO_MAXIMO_DE_SUBIDA) return rechazo('cuerpo_demasiado_grande', `La imagen ${i + 1} supera los 30 MB que admite Meta.`);
+        archivos.push({ nombre: subido.name, tipo: subido.type, bytes: new Uint8Array(await subido.arrayBuffer()) });
+      }
+    } else {
+      for (const [i, enlace] of enlaces.entries()) {
+        const drive = await descargarDeDrive(enlace);
+        if (drive.tipo === 'error') return rechazo('peticion_invalida', enlaces.length > 1 ? `Enlace ${i + 1}: ${drive.detalle}` : drive.detalle);
+        archivos.push({ nombre: drive.nombre, tipo: drive.tipoMime, bytes: drive.bytes });
+      }
     }
 
     const organizacionId = organizacionActual();
     const r = await analizarPieza({
       organizacionId,
-      archivo,
+      archivos,
       copy: texto(formulario.get('copy')),
-      guion: texto(formulario.get('guion')),
       formato: formato as FormatoDestino,
     });
     if (r.tipo === 'rechazo') return rechazo(r.codigo, r.detalle);

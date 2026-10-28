@@ -2,7 +2,7 @@
 
 Maqueta funcional local del **Sistema de validación multimodal de contenido** de ARIA, construida sobre la
 carcasa de `aria-comando-central` (AIOS — Command Center). Agrega la sección **Marketing › Validador de
-contenido**, que revisa cada pieza (imagen, copy y guion) en dos ejes —el criterio de marca y las políticas
+contenido**, que revisa cada pieza —un post (una imagen o un carrusel de hasta 20) o una secuencia de historias, y su copy— en dos ejes —el criterio de marca y las políticas
 de Meta— con una capa determinística y un motor de análisis con Claude.
 
 Las instrucciones de construcción están en [`docs/INSTRUCCIONES-aria-validador-multimodal.md`](docs/INSTRUCCIONES-aria-validador-multimodal.md)
@@ -35,7 +35,7 @@ LanguageTool tarda unos segundos en arrancar la primera vez; si no responde, el 
 | Pestaña | Qué se hace |
 |---|---|
 | **Dashboard** | Los errores recurrentes de los últimos 30 días, el porcentaje de piezas sin hallazgos del mes y las restricciones de marca activas, con «Agregar restricción». |
-| **Nuevo análisis** | Arrastra una imagen (o pega un enlace público de Google Drive), pega el copy y el guion, elige el formato (feed, historia, reel) y «Analizar pieza». El resultado trae el nivel de riesgo, los hallazgos por eje, la versión del corpus, el tiempo y el costo; cada hallazgo cita su regla, su evidencia y su ubicación, y se marca «Correcto» o «Incorrecto». |
+| **Nuevo análisis** | Arrastra una o varias imágenes —hasta 20, el máximo de un carrusel de Instagram— en el orden en que se publican (se reordenan con las flechas), o pega enlaces públicos de Google Drive, uno por línea. Pega el copy, elige **Post** (una imagen o carrusel) o **Historias consecutivas** y «Analizar». Todo se analiza en una sola pasada. El resultado trae el nivel de riesgo, los hallazgos por eje, la versión del corpus, el tiempo y el costo; cada hallazgo cita su regla, su evidencia, su ubicación y la imagen donde está, y se marca «Correcto» o «Incorrecto». |
 | **Historial** | Todos los análisis, filtrables por nivel de riesgo y fechas. Al abrir uno se ve su detalle y se dan o cambian los veredictos. |
 | **Reglas de marca** | El corpus vigente por eje, las versiones anteriores (sólo lectura), las reglas candidatas a ajuste y «Agregar restricción», que crea la versión N+1. |
 
@@ -45,7 +45,7 @@ LanguageTool tarda unos segundos en arrancar la primera vez; si no responde, el 
 npm run validador:evaluar
 ```
 
-Corre el flujo real sobre las 12 piezas etiquetadas de `evaluacion/piezas/` y escribe
+Corre el flujo real sobre las 15 piezas etiquetadas (incluye un carrusel, historias consecutivas y un carrusel con proporciones mezcladas) de `evaluacion/piezas/` y escribe
 `evaluacion/resultados/AAAA-MM-DD.md` con K1 (detección), K2 (falsas alertas), K3 (trazabilidad), K4 (tiempo) y
 K5 (costo), sus metas, el desglose de K1 por categoría y las piezas a revisar con el jefe del área. Los análisis de la
 evaluación quedan en el historial.
@@ -69,6 +69,6 @@ evaluación quedan en el historial.
 | `lib/validador/` | El motor: corpus, capa determinística, LanguageTool, Claude, revisión, riesgo, costos, flujo y registro. |
 | `app/api/validador/` | Las rutas del API. |
 | `app/validador.css` | Los estilos, sólo con tokens de ARIA. |
-| `db/migraciones/079_el_validador_de_contenido.sql` | El esquema `validador`. |
+| `db/migraciones/079_el_validador_de_contenido.sql`, `080_las_imagenes_del_carrusel.sql` | El esquema `validador` y las imágenes de cada pieza. |
 | `db/sembrado/` | La marca y el corpus semilla. |
 | `lib/maqueta/stubs/`, `app/sesion-de-maqueta.ts` | Lo que reemplaza la infraestructura de ARIA en la maqueta. |

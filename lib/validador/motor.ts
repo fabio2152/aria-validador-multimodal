@@ -38,10 +38,19 @@ export const TIPOS_DE_IMAGEN = ['image/jpeg', 'image/png', 'image/webp', 'image/
 export type TipoDeImagen = (typeof TIPOS_DE_IMAGEN)[number];
 export const PESO_MAXIMO_PARA_EL_MODELO = 5 * 1024 * 1024;
 
+/** Una imagen de la pieza, con su lugar en el carrusel o en la secuencia de historias (desde 1). */
+export interface ImagenParaElModelo {
+  orden: number;
+  base64: string;
+  tipo: TipoDeImagen;
+}
+
 export interface PiezaParaElModelo {
-  imagen: { base64: string; tipo: TipoDeImagen } | null;
+  /** Todas van en la MISMA llamada: el carrusel se lee entero, como lo ve quien lo desliza. */
+  imagenes: readonly ImagenParaElModelo[];
+  /** Cuántas tiene la pieza; puede ser más que `imagenes` si alguna no se pudo enviar por su peso. */
+  totalDeImagenes: number;
   copy: string | null;
-  guion: string | null;
   formato: FormatoDestino;
 }
 
@@ -53,16 +62,18 @@ export type CodigoDeFallo = 'IA-LLAVE' | 'IA-SATURADO' | 'IA-CONEXION' | 'IA-REC
 
 const ROL = [
   'Eres el revisor de conformidad de contenido publicitario de la marca ARIA, una aceleradora de negocios high ticket.',
-  'Evalúas cada pieza (imagen, copy y guion o transcripción) en dos ejes: el criterio de marca de ARIA y las políticas publicitarias de Meta.',
+  'Evalúas cada pieza —un post de Instagram con una o varias imágenes (carrusel), o una secuencia de historias consecutivas, y su copy— en dos ejes: el criterio de marca de ARIA y las políticas publicitarias de Meta.',
   '',
   'Reglas de tu trabajo:',
   '- Sólo reportas un hallazgo si incumple una regla del corpus que recibes, y citas su código exacto en `codigo_de_regla`. Nunca inventes códigos ni reportes problemas que no estén en el corpus.',
-  '- La evidencia es literal: el fragmento exacto del copy o del guion entre comillas, o una descripción precisa de lo que se ve en la imagen o del texto que aparece en ella.',
-  '- `ubicacion` es una de: copy, guion, imagen, texto_en_imagen.',
+  '- La evidencia es literal: el fragmento exacto del copy entre comillas, o una descripción precisa de lo que se ve en la imagen o del texto que aparece en ella.',
+  '- `ubicacion` es una de: copy, imagen, texto_en_imagen.',
+  '- `imagen` es el número de la imagen donde está el hallazgo (1 = la primera del carrusel o de la secuencia), según el rótulo «Imagen N de M» que la precede. Usa 0 si el hallazgo es del copy o de la pieza entera. Si el mismo problema se repite en varias imágenes, un hallazgo por imagen.',
+  '- Lee el carrusel o la secuencia como un todo: también es un hallazgo un mensaje que se arma entre varias imágenes.',
   '- `confianza` va de 0 a 1: qué tan seguro estás de que la pieza incumple la regla. Usa menos de 0,6 cuando sea discutible.',
   '- La sugerencia dice cómo corregirlo, en una frase.',
   '- Un mismo fragmento puede incumplir varias reglas: un hallazgo por regla.',
-  '- La ortografía del copy y del guion ya la revisa otra herramienta: de `MARCA-ORT-01` sólo reportas errores del texto que aparece dentro de la imagen.',
+  '- La ortografía del copy ya la revisa otra herramienta: de `MARCA-ORT-01` sólo reportas errores del texto que aparece dentro de las imágenes.',
   '- Si la pieza cumple todo, registras una lista vacía. No busques hallazgos donde no los hay.',
   '',
   'Respondes SIEMPRE llamando una sola vez a la herramienta `registrar_hallazgos`, en español.',
@@ -82,13 +93,14 @@ const HERRAMIENTA = {
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['codigo_de_regla', 'eje', 'severidad', 'evidencia', 'ubicacion', 'confianza', 'sugerencia'],
+          required: ['codigo_de_regla', 'eje', 'severidad', 'evidencia', 'ubicacion', 'imagen', 'confianza', 'sugerencia'],
           properties: {
             codigo_de_regla: { type: 'string', description: 'El código exacto de la regla del corpus, p. ej. META-PUB-01.' },
             eje: { type: 'string', enum: ['marca', 'plataforma'] },
             severidad: { type: 'string', enum: ['alta', 'media', 'baja'] },
             evidencia: { type: 'string', description: 'Fragmento literal o descripción precisa de lo visto en la imagen.' },
-            ubicacion: { type: 'string', enum: ['copy', 'guion', 'imagen', 'texto_en_imagen'] },
+            ubicacion: { type: 'string', enum: ['copy', 'imagen', 'texto_en_imagen'] },
+            imagen: { type: 'integer', description: 'Número de la imagen (1 = la primera); 0 si es del copy o de la pieza entera.' },
             confianza: { type: 'number', description: 'De 0 a 1.' },
             sugerencia: { type: 'string', description: 'Cómo corregirlo.' },
           },
@@ -116,10 +128,14 @@ function bloqueDeReglas(reglas: readonly Regla[]): string {
 }
 
 function textoDeLaPieza(pieza: PiezaParaElModelo, noAplican: readonly string[], instruccion: string | null): string {
-  const partes = [`Formato destino: ${pieza.formato}.`];
-  partes.push(pieza.imagen ? 'Imagen: adjunta arriba.' : 'Imagen: la pieza no tiene imagen.');
+  const donde = pieza.formato === 'historia' ? 'historias consecutivas' : 'post del feed';
+  const partes = [`Formato destino: ${donde}.`];
+  if (pieza.totalDeImagenes === 0) partes.push('Imágenes: la pieza no tiene imágenes.');
+  else if (pieza.totalDeImagenes === 1) partes.push('Imágenes: una, adjunta arriba.');
+  else partes.push(`Imágenes: ${pieza.totalDeImagenes}, adjuntas arriba en el orden en que se publican (${pieza.formato === 'historia' ? 'una historia tras otra' : 'carrusel'}).`);
+  const faltan = pieza.totalDeImagenes - pieza.imagenes.length;
+  if (faltan > 0) partes.push(`${faltan} imagen(es) no se adjuntaron por su peso: no las evalúes.`);
   partes.push(pieza.copy ? `Copy de la publicación:\n"""\n${pieza.copy}\n"""` : 'Copy: la pieza no tiene copy.');
-  partes.push(pieza.guion ? `Guion o transcripción:\n"""\n${pieza.guion}\n"""` : 'Guion: la pieza no tiene guion.');
   if (noAplican.length > 0) partes.push(`Reglas que NO aplican a esta pieza (no las reportes): ${noAplican.join(', ')}.`);
   if (instruccion) partes.push(instruccion);
   partes.push('Analiza la pieza contra el corpus y llama a `registrar_hallazgos`.');
@@ -211,8 +227,10 @@ export async function analizarConClaude(opciones: {
 }): Promise<ResultadoDelMotor> {
   const { llave, modelo, esfuerzo, reglas, noAplican, pieza } = opciones;
   const contenido: unknown[] = [];
-  if (pieza.imagen) {
-    contenido.push({ type: 'image', source: { type: 'base64', media_type: pieza.imagen.tipo, data: pieza.imagen.base64 } });
+  for (const imagen of pieza.imagenes) {
+    // El rótulo antes de cada imagen es lo que le permite al modelo decir en cuál está cada hallazgo.
+    contenido.push({ type: 'text', text: `Imagen ${imagen.orden} de ${pieza.totalDeImagenes}:` });
+    contenido.push({ type: 'image', source: { type: 'base64', media_type: imagen.tipo, data: imagen.base64 } });
   }
   contenido.push({ type: 'text', text: textoDeLaPieza(pieza, noAplican, opciones.instruccion ?? null) });
 
@@ -247,6 +265,7 @@ export async function analizarConClaude(opciones: {
     const crudos = (llamada.input as { hallazgos?: unknown } | undefined)?.hallazgos;
     const lista = Array.isArray(crudos) ? (crudos as Record<string, unknown>[]) : [];
     const validos = new Set(reglas.filter((x) => !noAplican.includes(x.codigo)).map((x) => x.codigo));
+    const enviadas = new Set(pieza.imagenes.map((i) => i.orden));
     const hallazgos: HallazgoPropuesto[] = [];
     let descartados = 0;
     for (const h of lista) {
@@ -257,10 +276,13 @@ export async function analizarConClaude(opciones: {
         continue;
       }
       const ubicacion = typeof h.ubicacion === 'string' && (UBICACIONES as readonly string[]).includes(h.ubicacion) ? h.ubicacion : 'imagen';
+      // Sólo un número de imagen que de verdad se envió; 0 o uno fuera de rango es «la pieza entera».
+      const imagen = ubicacion !== 'copy' && typeof h.imagen === 'number' && enviadas.has(h.imagen) ? h.imagen : null;
       hallazgos.push({
         codigo_de_regla: codigo,
         evidencia,
         ubicacion,
+        imagen,
         confianza: numero(h.confianza),
         sugerencia: typeof h.sugerencia === 'string' && h.sugerencia.trim() !== '' ? h.sugerencia.trim() : null,
         origen: 'modelo',

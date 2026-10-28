@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { EJES, ORIGENES, SEVERIDADES, UBICACIONES, pedir, textoDelRechazo } from './comun.js';
 
-export default function TarjetaDeHallazgo({ hallazgo, alCambiar }) {
+export default function TarjetaDeHallazgo({ hallazgo, alCambiar, alVerImagen }) {
   const [comentando, setComentando] = useState(false);
   const [comentario, setComentario] = useState(hallazgo.retroalimentacion?.comentario ?? '');
   const [guardando, setGuardando] = useState(false);
@@ -47,6 +47,15 @@ export default function TarjetaDeHallazgo({ hallazgo, alCambiar }) {
         <h3 className="val-hallazgo-titulo">
           <span className={`val-eje ${hallazgo.eje}`}>{EJES[hallazgo.eje]}</span>
           <span>{hallazgo.regla.categoria}</span>
+          {hallazgo.imagen != null ? (
+            alVerImagen ? (
+              <button type="button" className="val-en-imagen" onClick={() => alVerImagen(hallazgo.imagen)} title="Ver esta imagen">
+                Imagen {hallazgo.imagen}
+              </button>
+            ) : (
+              <span className="val-en-imagen">Imagen {hallazgo.imagen}</span>
+            )
+          ) : null}
         </h3>
         <p className="val-hallazgo-meta val-mono">{meta.join(' · ')}</p>
         <p className="val-hallazgo-regla">{hallazgo.regla.descripcion}</p>

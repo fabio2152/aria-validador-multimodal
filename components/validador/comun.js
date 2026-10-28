@@ -16,7 +16,14 @@ export const NIVELES = {
 
 export const EJES = { marca: 'Marca', plataforma: 'Plataforma' };
 export const SEVERIDADES = { alta: 'Alta', media: 'Media', baja: 'Baja' };
-export const FORMATOS = { feed: 'Feed', historia: 'Historia', reel: 'Reel' };
+/** Dónde se publica. `reel` queda sólo para leer análisis viejos: la maqueta se centra en imágenes. */
+export const FORMATOS = { feed: 'Post', historia: 'Historias', reel: 'Reel' };
+
+/** Los que se ofrecen al analizar. */
+export const FORMATOS_DE_INGRESO = { feed: 'Post (una imagen o carrusel)', historia: 'Historias consecutivas' };
+
+/** El tope de imágenes por pieza: el de un carrusel de Instagram (`lib/validador/hallazgos.ts`). */
+export const MAXIMO_DE_IMAGENES = 20;
 export const UBICACIONES = {
   copy: 'copy',
   guion: 'guion',
@@ -95,6 +102,6 @@ export async function enviarPieza(formulario) {
 }
 
 /** La URL de la imagen de un análisis. */
-export function urlDelArchivo(id) {
-  return `/api/validador/analisis/${id}/archivo`;
+export function urlDelArchivo(id, imagen = 1) {
+  return `/api/validador/analisis/${id}/archivo?imagen=${imagen}`;
 }

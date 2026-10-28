@@ -1,9 +1,8 @@
 {
   "id": "010",
-  "formato_destino": "reel",
-  "copy": "",
-  "guion": "Hoy te cuento el método que usamos con nuestros clientes para ordenar el proceso comercial: primero definimos el cliente ideal, luego el guion de la llamada y al final el seguimiento.",
+  "formato_destino": "feed",
+  "copy": "Te contamos el método que usamos con nuestros clientes: primero el cliente ideal, luego la llamada y al final el seguimiento.",
   "conforme": true,
   "reglas_esperadas": [],
-  "nota": "Guion conforme de reel"
+  "nota": "Copy conforme, pieza solo de texto"
 }

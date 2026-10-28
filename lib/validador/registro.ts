@@ -13,6 +13,8 @@ export interface HallazgoDelDetalle {
   severidad: Severidad;
   evidencia: string;
   ubicacion: string;
+  /** En qué imagen está, desde 1; `null` si es del copy o de la pieza entera. */
+  imagen: number | null;
   confianza: number;
   sugerencia: string | null;
   origen: OrigenDelHallazgo;
@@ -47,6 +49,7 @@ export async function detalleDelAnalisis(db: Db, organizacionId: string, id: str
       'h.severidad',
       'h.evidencia',
       'h.ubicacion',
+      'h.imagen',
       'h.confianza',
       'h.sugerencia',
       'h.origen',
@@ -68,13 +71,26 @@ export async function detalleDelAnalisis(db: Db, organizacionId: string, id: str
       severidad: f.severidad,
       evidencia: f.evidencia,
       ubicacion: f.ubicacion,
+      imagen: f.imagen,
       confianza: Number(f.confianza),
       sugerencia: f.sugerencia,
       origen: f.origen,
       regla: { categoria: f.categoria, descripcion: f.descripcion, fuente: f.fuente },
       retroalimentacion: f.veredicto ? { veredicto: f.veredicto, comentario: f.comentario, creada_en: f.veredicto_en! } : null,
     }))
-    .sort((x, y) => ORDEN_DE_SEVERIDAD[x.severidad] - ORDEN_DE_SEVERIDAD[y.severidad] || x.codigo_de_regla.localeCompare(y.codigo_de_regla));
+    .sort(
+      (x, y) =>
+        ORDEN_DE_SEVERIDAD[x.severidad] - ORDEN_DE_SEVERIDAD[y.severidad] ||
+        (x.imagen ?? 0) - (y.imagen ?? 0) ||
+        x.codigo_de_regla.localeCompare(y.codigo_de_regla),
+    );
+
+  const imagenes = await db
+    .selectFrom('validador.imagenes_del_analisis')
+    .select(['orden', 'nombre_del_archivo', 'ruta_del_archivo', 'ancho', 'alto', 'peso_en_bytes'])
+    .where('analisis_id', '=', id)
+    .orderBy('orden')
+    .execute();
 
   const costo = Number(a.costo_usd);
   return {
@@ -82,11 +98,7 @@ export async function detalleDelAnalisis(db: Db, organizacionId: string, id: str
     creado_en: a.creado_en,
     tipo_de_pieza: a.tipo_de_pieza,
     formato_destino: a.formato_destino,
-    nombre_del_archivo: a.nombre_del_archivo,
-    tiene_archivo: a.ruta_del_archivo !== null,
-    ancho: a.ancho,
-    alto: a.alto,
-    peso_en_bytes: a.peso_en_bytes,
+    imagenes: imagenes.map(({ ruta_del_archivo, ...i }) => ({ ...i, tiene_archivo: ruta_del_archivo !== null })),
     copy: a.copy,
     guion: a.guion,
     nivel_de_riesgo: a.nivel_de_riesgo,
@@ -108,13 +120,15 @@ export async function detalleDelAnalisis(db: Db, organizacionId: string, id: str
 
 export type DetalleDelAnalisis = NonNullable<Awaited<ReturnType<typeof detalleDelAnalisis>>>;
 
-/** La ruta del archivo de un análisis, para servir la vista previa. */
-export async function archivoDelAnalisis(db: Db, organizacionId: string, id: string) {
+/** La ruta de una imagen de un análisis (`orden` desde 1), para servir la vista previa. */
+export async function archivoDelAnalisis(db: Db, organizacionId: string, id: string, orden: number) {
   return db
-    .selectFrom('validador.analisis')
-    .select(['ruta_del_archivo', 'nombre_del_archivo'])
-    .where('organizacion_id', '=', organizacionId)
-    .where('id', '=', id)
+    .selectFrom('validador.imagenes_del_analisis as i')
+    .innerJoin('validador.analisis as a', 'a.id', 'i.analisis_id')
+    .select(['i.ruta_del_archivo', 'i.nombre_del_archivo'])
+    .where('a.organizacion_id', '=', organizacionId)
+    .where('a.id', '=', id)
+    .where('i.orden', '=', orden)
     .executeTakeFirst();
 }
 
@@ -144,8 +158,6 @@ export async function historial(db: Db, organizacionId: string, filtros: Filtros
       'a.creado_en',
       'a.tipo_de_pieza',
       'a.formato_destino',
-      'a.nombre_del_archivo',
-      'a.ruta_del_archivo',
       'a.copy',
       'a.nivel_de_riesgo',
       'a.duracion_ms',
@@ -153,6 +165,20 @@ export async function historial(db: Db, organizacionId: string, filtros: Filtros
       'v.numero as version_numero',
     ])
     .select((eb) => [
+      // La primera imagen es la portada del carrusel: es la que se ve en la miniatura.
+      eb
+        .selectFrom('validador.imagenes_del_analisis as i')
+        .whereRef('i.analisis_id', '=', 'a.id')
+        .where('i.orden', '=', 1)
+        .select('i.nombre_del_archivo')
+        .as('nombre_del_archivo'),
+      eb
+        .selectFrom('validador.imagenes_del_analisis as i')
+        .whereRef('i.analisis_id', '=', 'a.id')
+        .where('i.orden', '=', 1)
+        .select('i.ruta_del_archivo')
+        .as('ruta_del_archivo'),
+      eb.selectFrom('validador.imagenes_del_analisis as i').whereRef('i.analisis_id', '=', 'a.id').select(eb.fn.countAll<string>().as('n')).as('imagenes'),
       eb.selectFrom('validador.hallazgos as h').whereRef('h.analisis_id', '=', 'a.id').where('h.eje', '=', 'marca').select(eb.fn.countAll<string>().as('n')).as('marca'),
       eb.selectFrom('validador.hallazgos as h').whereRef('h.analisis_id', '=', 'a.id').where('h.eje', '=', 'plataforma').select(eb.fn.countAll<string>().as('n')).as('plataforma'),
       eb
@@ -171,10 +197,11 @@ export async function historial(db: Db, organizacionId: string, filtros: Filtros
     total: Number(total.n),
     pagina: filtros.pagina,
     tamano: TAMANO_DE_PAGINA,
-    analisis: filas.map(({ ruta_del_archivo, marca, plataforma, con_veredicto, costo_usd, copy, ...f }) => ({
+    analisis: filas.map(({ ruta_del_archivo, marca, plataforma, con_veredicto, costo_usd, copy, imagenes, ...f }) => ({
       ...f,
       extracto: copy ? copy.slice(0, 80) : null,
-      tiene_archivo: ruta_del_archivo !== null,
+      tiene_archivo: ruta_del_archivo != null,
+      imagenes: Number(imagenes ?? 0),
       costo_usd: Number(costo_usd),
       hallazgos: { marca: Number(marca ?? 0), plataforma: Number(plataforma ?? 0) },
       con_veredicto: Number(con_veredicto ?? 0),

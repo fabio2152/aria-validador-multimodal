@@ -1,6 +1,6 @@
 // Los tipos de las tablas del validador, para el constructor de consultas.
 //
-// Escritos a mano contra `db/migraciones/079_el_validador_de_contenido.sql`, no generados, igual que
+// Escritos a mano contra `db/migraciones/079_el_validador_de_contenido.sql` y `080_las_imagenes_del_carrusel.sql`, no generados, igual que
 // `lib/datos/esquema.ts` de ARIA: el SQL es la fuente de verdad.
 //
 // Las claves van CALIFICADAS (`validador.analisis`) y no sueltas como en ARIA: la maqueta no tiene la
@@ -13,7 +13,7 @@ export type Eje = 'marca' | 'plataforma';
 export type Severidad = 'alta' | 'media' | 'baja';
 export type TipoDeVerificacion = 'deterministica' | 'modelo';
 export type OrigenDeLaRegla = 'corpus' | 'restriccion_del_jefe';
-export type TipoDePieza = 'imagen' | 'texto' | 'video';
+export type TipoDePieza = 'imagen' | 'carrusel' | 'texto' | 'video';
 export type FormatoDestino = 'feed' | 'historia' | 'reel';
 export type NivelDeRiesgo = 'alto' | 'medio' | 'bajo' | 'sin_hallazgos';
 export type OrigenDelHallazgo = 'deterministica' | 'modelo' | 'revision';
@@ -64,11 +64,6 @@ export interface TablaAnalisis {
   version_id: string;
   tipo_de_pieza: TipoDePieza;
   formato_destino: FormatoDestino;
-  nombre_del_archivo: string | null;
-  ruta_del_archivo: string | null;
-  ancho: number | null;
-  alto: number | null;
-  peso_en_bytes: number | null;
   copy: string | null;
   guion: string | null;
   nivel_de_riesgo: NivelDeRiesgo;
@@ -97,6 +92,20 @@ export interface TablaHallazgos {
   confianza: Numerico;
   sugerencia: string | null;
   origen: OrigenDelHallazgo;
+  /** En qué imagen del carrusel o de la secuencia está, desde 1. Nulo si es del copy o de la pieza entera. */
+  imagen: number | null;
+}
+
+export interface TablaImagenesDelAnalisis {
+  id: Generated<string>;
+  analisis_id: string;
+  /** Su lugar en el carrusel o en la secuencia de historias, desde 1. */
+  orden: number;
+  nombre_del_archivo: string | null;
+  ruta_del_archivo: string | null;
+  ancho: number;
+  alto: number;
+  peso_en_bytes: number;
 }
 
 export interface TablaRetroalimentacion {
@@ -113,5 +122,6 @@ export interface BaseDelValidador {
   'validador.reglas': TablaReglas;
   'validador.analisis': TablaAnalisis;
   'validador.hallazgos': TablaHallazgos;
+  'validador.imagenes_del_analisis': TablaImagenesDelAnalisis;
   'validador.retroalimentacion': TablaRetroalimentacion;
 }

@@ -25,7 +25,6 @@ export interface Version {
 export interface FormaDeLaPieza {
   conImagen: boolean;
   conCopy: boolean;
-  conGuion: boolean;
   formato: FormatoDestino;
 }
 
@@ -85,8 +84,10 @@ export function reglasDelEje(reglas: readonly Regla[], eje: Eje): Regla[] {
 }
 
 /**
- * ¿La regla aplica a esta pieza? Las de formato miran la imagen o el copy; la de ortografía, el copy o el
- * guion; la de coherencia del copy, que haya copy y además algo con qué compararlo. Las demás, siempre.
+ * ¿La regla aplica a esta pieza? Las de formato miran las imágenes o el copy; la de ortografía, el copy; la
+ * de coherencia del copy, que haya copy y además imágenes con qué compararlo. Las demás, siempre.
+ *
+ * El guion o transcripción salió de la maqueta mientras sólo se analizan imágenes: vuelve con el video.
  */
 export function aplica(regla: Pick<Regla, 'codigo'>, pieza: FormaDeLaPieza): boolean {
   switch (regla.codigo) {
@@ -97,9 +98,9 @@ export function aplica(regla: Pick<Regla, 'codigo'>, pieza: FormaDeLaPieza): boo
     case 'FMT-04':
       return pieza.conCopy;
     case 'MARCA-ORT-01':
-      return pieza.conCopy || pieza.conGuion;
+      return pieza.conCopy || pieza.conImagen;
     case 'MARCA-COPY-01':
-      return pieza.conCopy && (pieza.conImagen || pieza.conGuion);
+      return pieza.conCopy && pieza.conImagen;
     default:
       return true;
   }

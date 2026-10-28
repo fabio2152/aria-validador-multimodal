@@ -1,0 +1,10 @@
+{
+  "id": "015",
+  "formato_destino": "feed",
+  "copy": "El proceso comercial ordenado, en tres pasos. Te explicamos el método que usamos con nuestros clientes.",
+  "conforme": false,
+  "reglas_esperadas": [
+    "FMT-01"
+  ],
+  "nota": "Carrusel con la imagen 2 en 1:1 y las demás en 4:5"
+}

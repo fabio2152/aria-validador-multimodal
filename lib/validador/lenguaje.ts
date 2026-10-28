@@ -50,6 +50,7 @@ export async function verificarOrtografia(textos: readonly { texto: string; ubic
         codigo_de_regla: 'MARCA-ORT-01',
         evidencia: correccion ? `«${fragmento}» → corregir a «${correccion}». ${c.message}` : `«${fragmento}»: ${c.message}`,
         ubicacion,
+        imagen: null,
         confianza: 1,
         sugerencia: correccion ? `Reemplazar «${fragmento}» por «${correccion}».` : c.message,
         origen: 'deterministica',

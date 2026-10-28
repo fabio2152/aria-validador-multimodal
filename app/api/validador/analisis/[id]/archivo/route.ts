@@ -1,5 +1,5 @@
-// GET: la imagen de un análisis, para la vista previa y la miniatura del historial. Se sirve desde el
-// almacén local por el id del análisis, nunca por una ruta que mande el navegador.
+// GET: una imagen de un análisis, para la vista previa y la miniatura del historial. Se sirve desde el
+// almacén local por el id del análisis y su número, nunca por una ruta que mande el navegador.
 
 import { readFile } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
@@ -11,11 +11,14 @@ import { esUuid, responder } from '../../../../../../lib/validador/rutas.ts';
 
 const TIPOS: Readonly<Record<string, string>> = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
 
-export async function GET(_peticion: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+/** `?imagen=N` elige la imagen del carrusel o de la secuencia (desde 1); sin él, la primera. */
+export async function GET(peticion: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   return responder(async () => {
     const { id } = await params;
     if (!esUuid(id)) return rechazo('no_encontrado');
-    const fila = await archivoDelAnalisis(base(), organizacionActual(), id);
+    const orden = Number(new URL(peticion.url).searchParams.get('imagen') ?? '1');
+    if (!Number.isInteger(orden) || orden < 1) return rechazo('no_encontrado');
+    const fila = await archivoDelAnalisis(base(), organizacionActual(), id, orden);
     if (!fila?.ruta_del_archivo) return rechazo('no_encontrado');
     const ruta = resolve(join(ALMACEN, fila.ruta_del_archivo));
     if (!ruta.startsWith(ALMACEN + sep)) return rechazo('no_encontrado');

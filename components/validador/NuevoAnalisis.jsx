@@ -75,8 +75,9 @@ export default function NuevoAnalisis({ alCambiar }) {
       {estado.tipo === 'vacio' ? (
         <div className="card val-estado val-vacio">
           <p>
-            Carga una imagen, pega el copy o el guion de la pieza y elige el formato destino. El validador la revisa en dos ejes —el
-            criterio de la marca y las políticas de Meta— y cada hallazgo cita su regla y su evidencia.
+            Carga la imagen del post, las del carrusel o las de tus historias consecutivas (hasta 20, en el orden en que se publican),
+            pega el copy y elige el formato. El validador revisa todo en una sola pasada en dos ejes —el criterio de la marca y las
+            políticas de Meta— y cada hallazgo cita su regla, su evidencia y la imagen donde está.
           </p>
         </div>
       ) : null}

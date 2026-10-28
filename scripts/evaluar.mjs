@@ -3,8 +3,9 @@
 //
 //   npm run validador:evaluar
 //
-// Cada pieza es un `NNN.json` (y, si tiene imagen, un `NNN.jpg` o `.png` con el mismo número):
-//   { id, formato_destino, copy, guion, conforme, reglas_esperadas: [códigos], nota }
+// Cada pieza es un `NNN.json` y sus imágenes: `NNN.jpg` si es una, o `NNN-1.jpg`, `NNN-2.jpg`, … si es un
+// carrusel o una secuencia de historias (`formato_destino`: `feed` o `historia`):
+//   { id, formato_destino, copy, conforme, reglas_esperadas: [códigos], nota }
 //
 // Los análisis quedan en el historial como cualquier otro: es el mismo flujo, no una simulación.
 // Necesita ANTHROPIC_API_KEY en .env.local, la base levantada y migrada, y LanguageTool.
@@ -17,7 +18,7 @@
 //
 // Crítica = una regla esperada de severidad ALTA en la versión del corpus con que se analizó.
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -46,8 +47,13 @@ function leerPiezas() {
     .sort()
     .map((n) => {
       const pieza = JSON.parse(readFileSync(join(PIEZAS, n), 'utf8'));
-      const extension = Object.keys(TIPOS).find((e) => existsSync(join(PIEZAS, `${pieza.id}${e}`)));
-      return { ...pieza, imagen: extension ? { ruta: join(PIEZAS, `${pieza.id}${extension}`), tipo: TIPOS[extension], nombre: `${pieza.id}${extension}` } : null };
+      // Una imagen: `NNN.jpg`. Un carrusel o una secuencia de historias: `NNN-1.jpg`, `NNN-2.jpg`, … en orden.
+      const imagenes = readdirSync(PIEZAS)
+        .map((archivo) => ({ archivo, m: archivo.match(new RegExp(`^${pieza.id}(?:-(\\d+))?(\\.\\w+)$`)) }))
+        .filter(({ m }) => m && TIPOS[m[2].toLowerCase()])
+        .sort((a, b) => Number(a.m[1] ?? 0) - Number(b.m[1] ?? 0))
+        .map(({ archivo, m }) => ({ ruta: join(PIEZAS, archivo), tipo: TIPOS[m[2].toLowerCase()], nombre: archivo }));
+      return { ...pieza, imagenes };
     });
 }
 
@@ -68,9 +74,8 @@ for (const p of piezas) {
   process.stdout.write(`· ${p.id} … `);
   const r = await analizarPieza({
     organizacionId: ORGANIZACION_DE_MAQUETA,
-    archivo: p.imagen ? { nombre: p.imagen.nombre, tipo: p.imagen.tipo, bytes: new Uint8Array(readFileSync(p.imagen.ruta)) } : null,
+    archivos: p.imagenes.map((i) => ({ nombre: i.nombre, tipo: i.tipo, bytes: new Uint8Array(readFileSync(i.ruta)) })),
     copy: p.copy ?? null,
-    guion: p.guion ?? null,
     formato: p.formato_destino,
   });
   if (r.tipo === 'rechazo') {

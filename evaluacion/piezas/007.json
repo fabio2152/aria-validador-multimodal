@@ -1,12 +1,11 @@
 {
   "id": "007",
-  "formato_destino": "reel",
-  "copy": "",
-  "guion": "Con nuestro programa tus resultados están cien por ciento garantizados. Mira el antes y el después de este cliente: pasó de cero a cien mil dólares al mes en solo cuatro semanas.",
+  "formato_destino": "feed",
+  "copy": "Con nuestro programa tus resultados están cien por ciento garantizados. Mira el antes y el después de este cliente: pasó de cero a cien mil dólares al mes en solo cuatro semanas.",
   "conforme": false,
   "reglas_esperadas": [
     "META-PUB-04",
     "META-PUB-01"
   ],
-  "nota": "Guion de reel con garantía absoluta y antes y después sin sustento"
+  "nota": "Copy con garantía absoluta y antes y después sin sustento"
 }

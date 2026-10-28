@@ -144,14 +144,21 @@ export default function Historial({ visible, cambios, alCambiar }) {
                     <td className="val-mono">{fechaYHora(a.creado_en)}</td>
                     <td>
                       <button type="button" className="val-fila-pieza" onClick={(e) => (e.stopPropagation(), void abrir(a.id))}>
-                        {a.tiene_archivo ? (
-                          <img className="val-miniatura" src={urlDelArchivo(a.id)} alt="" loading="lazy" />
-                        ) : (
-                          <span className="val-miniatura val-miniatura-texto" aria-hidden="true">
-                            Aa
-                          </span>
-                        )}
-                        <span className="val-fila-nombre">{a.nombre_del_archivo ?? a.extracto ?? 'Pieza de texto'}</span>
+                        <span className="val-miniatura-caja">
+                          {a.tiene_archivo ? (
+                            <img className="val-miniatura" src={urlDelArchivo(a.id)} alt="" loading="lazy" />
+                          ) : (
+                            <span className="val-miniatura val-miniatura-texto" aria-hidden="true">
+                              Aa
+                            </span>
+                          )}
+                          {/* Un carrusel o una secuencia: la portada y cuántas imágenes tiene. */}
+                          {a.imagenes > 1 ? <span className="val-miniatura-cuenta">{a.imagenes}</span> : null}
+                        </span>
+                        <span className="val-fila-nombre">
+                          {a.imagenes > 1 ? `${a.imagenes} imágenes · ` : ''}
+                          {a.nombre_del_archivo ?? a.extracto ?? 'Pieza de texto'}
+                        </span>
                       </button>
                     </td>
                     <td>{FORMATOS[a.formato_destino]}</td>
